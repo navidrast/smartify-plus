@@ -2,14 +2,13 @@
 
 import { clsx } from 'clsx'
 import { AgentCard } from './AgentCard'
-import type { Message, ExtractedRecord } from '@/types'
+import type { Message } from '@/types'
 
 interface MessageBubbleProps {
   message: Message
-  onRecordSelect: (record: ExtractedRecord) => void
 }
 
-export function MessageBubble({ message, onRecordSelect }: MessageBubbleProps) {
+export function MessageBubble({ message }: MessageBubbleProps) {
   const isUser = message.role === 'user'
   const isAgent = message.role === 'agent'
 
@@ -21,7 +20,6 @@ export function MessageBubble({ message, onRecordSelect }: MessageBubbleProps) {
             agentType={message.agent_type}
             content={message.content}
             metadata={message.metadata}
-            onRecordSelect={onRecordSelect}
           />
         </div>
       </div>

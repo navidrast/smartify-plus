@@ -3,7 +3,7 @@
 import { clsx } from 'clsx'
 import { Bot } from 'lucide-react'
 import { AGENT_COLORS, AGENT_LABELS } from '@/lib/constants'
-import type { AgentType, ExtractedRecord } from '@/types'
+import type { AgentType } from '@/types'
 
 interface AgentCardProps {
   agentType: AgentType
@@ -11,7 +11,6 @@ interface AgentCardProps {
   metadata?: Record<string, unknown>
   status?: 'complete' | 'processing' | 'error'
   processingTime?: number
-  onRecordSelect?: (record: ExtractedRecord) => void
 }
 
 export function AgentCard({

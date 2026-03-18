@@ -10,15 +10,14 @@ import { AgentProgress } from '@/components/chat/AgentProgress'
 import { InputBar } from '@/components/chat/InputBar'
 import { UploadZone } from '@/components/chat/UploadZone'
 import { ScrollArea } from '@/components/ui/ScrollArea'
-import type { Message, ExtractedRecord, AgentEvent } from '@/types'
+import type { Message, AgentEvent } from '@/types'
 
 interface ChatAreaProps {
   conversationId: string | null
-  onRecordSelect: (record: ExtractedRecord) => void
   onTitleUpdate?: () => void
 }
 
-export function ChatArea({ conversationId, onRecordSelect, onTitleUpdate }: ChatAreaProps) {
+export function ChatArea({ conversationId, onTitleUpdate }: ChatAreaProps) {
   const scrollRef = useRef<HTMLDivElement>(null)
   const [showDrop, setShowDrop] = useState(false)
   const [isWaiting, setIsWaiting] = useState(false)
@@ -105,11 +104,7 @@ export function ChatArea({ conversationId, onRecordSelect, onTitleUpdate }: Chat
 
       <ScrollArea ref={scrollRef} className="flex-1 px-6 py-4">
         {messages?.map((msg) => (
-          <MessageBubble
-            key={msg.id}
-            message={msg}
-            onRecordSelect={onRecordSelect}
-          />
+          <MessageBubble key={msg.id} message={msg} />
         ))}
 
         {isWaiting && (
