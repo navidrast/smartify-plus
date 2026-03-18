@@ -9,6 +9,7 @@
  * only needs one ingress rule and Zero Trust works end-to-end.
  */
 
+const fs = require('fs')
 const path = require('path')
 const { createServer } = require('http')
 const httpProxy = require('http-proxy')
@@ -36,10 +37,52 @@ wsProxy.on('error', (err, _req, socket) => {
   if (socket && typeof socket.destroy === 'function') socket.destroy()
 })
 
+const MIME = {
+  '.js':   'application/javascript',
+  '.css':  'text/css',
+  '.json': 'application/json',
+  '.png':  'image/png',
+  '.jpg':  'image/jpeg',
+  '.svg':  'image/svg+xml',
+  '.ico':  'image/x-icon',
+  '.woff': 'font/woff',
+  '.woff2': 'font/woff2',
+}
+
+// Serve /_next/static/* directly from .next/static/ (Next.js
+// standalone's NextServer handler sometimes misses these in custom-server mode)
+function serveNextStatic(req, res) {
+  const relPath = req.url.replace(/^\/(_next\/static\/)/, '$1')
+  const filePath = path.join(__dirname, '.next', 'static', relPath.replace(/^_next\/static\//, ''))
+  fs.stat(filePath, (statErr, stat) => {
+    if (statErr || !stat.isFile()) return false
+    const ext = path.extname(filePath)
+    res.setHeader('Content-Type', MIME[ext] || 'application/octet-stream')
+    res.setHeader('Cache-Control', 'public, max-age=31536000, immutable')
+    res.statusCode = 200
+    fs.createReadStream(filePath).pipe(res)
+    return true
+  })
+  return null // async — we return null to signal "maybe"
+}
+
 let reqHandler
 
 const server = createServer(async (req, res) => {
   try {
+    // Fast-path: serve _next/static files before handing off to Next.js
+    if (req.url && req.url.startsWith('/_next/static/')) {
+      const relPath = req.url.replace(/^\/(_next\/static\/)/, '').replace(/^_next\/static\//, '')
+      const filePath = path.join(__dirname, '.next', 'static', relPath)
+      if (fs.existsSync(filePath) && fs.statSync(filePath).isFile()) {
+        const ext = path.extname(filePath)
+        res.setHeader('Content-Type', MIME[ext] || 'application/octet-stream')
+        res.setHeader('Cache-Control', 'public, max-age=31536000, immutable')
+        res.statusCode = 200
+        fs.createReadStream(filePath).pipe(res)
+        return
+      }
+    }
     await reqHandler(req, res)
   } catch (err) {
     console.error('[server error]', err)
