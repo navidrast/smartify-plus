@@ -8,7 +8,7 @@ openai==1.68.2
 pymupdf==1.25.3
 
 # ─── Image processing ────────────────────────────────────────────────────────
-Pillow==11.1.0
+Pillow==12.1.1
 
 # ─── Data manipulation and Excel export ──────────────────────────────────────
 pandas==2.2.3
