@@ -1,0 +1,18 @@
+# Phase One backend dependencies
+fastapi==0.115.0
+uvicorn[standard]==0.32.0
+websockets==13.1
+sqlalchemy[asyncio]==2.0.36
+aiosqlite==0.20.0
+alembic==1.14.0
+aiohttp==3.11.0
+python-multipart==0.0.12
+pydantic-settings==2.6.0
+
+# Carried from Phase Zero
+openai>=1.12.0
+pymupdf==1.25.3
+Pillow>=12.1.1
+pandas>=2.2.0
+openpyxl>=3.1.0
+reportlab>=4.1.0
