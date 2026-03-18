@@ -28,7 +28,7 @@ load_dotenv()
 
 # ─── Configuration ────────────────────────────────────────────────────────────
 OLLAMA_BASE_URL = os.getenv("OLLAMA_API_BASE", "http://localhost:11434/v1")
-OLLAMA_MODEL    = os.getenv("OLLAMA_MODEL",    "qwen2.5-vl:7b-instruct")
+OLLAMA_MODEL    = os.getenv("OLLAMA_MODEL",    "qwen2.5vl:7b")
 ALLOWED_EXTS    = {".pdf", ".png", ".jpg", ".jpeg", ".tiff", ".bmp", ".webp"}
 MAX_FILE_MB     = 50
 
@@ -131,7 +131,7 @@ except ConnectionRefusedError:
     err_msg = (
         f"❌ Cannot connect to Ollama at `{OLLAMA_BASE_URL}`. "
         "Ensure Ollama is running and the model is pulled. "
-        "Run: `ollama pull qwen2.5-vl:7b-instruct`"
+        "Run: `ollama pull qwen2.5vl:7b`"
     )
 except Exception as exc:
     logger.exception("Extraction pipeline failed")

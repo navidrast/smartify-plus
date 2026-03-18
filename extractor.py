@@ -279,7 +279,7 @@ def _call_ollama_vision(
 
     Args:
         client:    OpenAI client configured with Ollama base URL.
-        model:     Ollama model name (e.g. "qwen2.5-vl:7b-instruct").
+        model:     Ollama model name (e.g. "qwen2.5vl:7b").
         image_b64: Base64-encoded PNG as a plain string (no data URI prefix).
         timeout:   API call timeout in seconds.
 
