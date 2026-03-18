@@ -26,12 +26,13 @@ services:
     #   2. Poll until the API is ready (avoids race condition)
     #   3. Pull the vision model (no-op if already cached in volume)
     #   4. Keep container alive via `wait`
+    #   NOTE: uses `ollama list` instead of curl — curl is not in the ollama image
     entrypoint: ["/bin/sh", "-c"]
     command: >
       "ollama serve &
        SERVE_PID=$$!
        echo '[smartify] Waiting for Ollama API to become ready...'
-       until curl -sf http://localhost:11434/api/tags > /dev/null 2>&1; do
+       until ollama list > /dev/null 2>&1; do
          sleep 2
        done
        echo '[smartify] Pulling qwen2.5-vl:7b-instruct (first run ~5 GB download)...'
@@ -40,7 +41,8 @@ services:
        wait $$SERVE_PID"
     healthcheck:
       # Only marked healthy once the model is actually present and serving
-      test: ["CMD-SHELL", "curl -sf http://localhost:11434/api/tags | grep -q 'qwen2.5-vl'"]
+      # Uses ollama list instead of curl — curl is not available in the ollama image
+      test: ["CMD-SHELL", "ollama list | grep -q 'qwen2.5-vl'"]
       interval: 15s
       timeout: 10s
       start_period: 600s    # Allow 10 min for initial model download on slow connections
