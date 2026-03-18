@@ -22,11 +22,11 @@ services:
       - QWEN_VISION_MODEL=${QWEN_VISION_MODEL:-qwen-vl-max}
       - QWEN_TEXT_MODEL=${QWEN_TEXT_MODEL:-qwen-plus}
       - QWEN_API_KEY=${QWEN_API_KEY}
-      - DATABASE_URL=sqlite+aiosqlite:///./smartify.db
+      - DATABASE_URL=sqlite+aiosqlite:////app/data/smartify.db
       - DEMO_USER_ID=demo-user-001
       - ABR_GUID=${ABR_GUID:-}
     volumes:
-      - smartify_db:/app/smartify.db
+      - smartify_db:/app/data
     restart: unless-stopped
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:8000/health || exit 1"]
