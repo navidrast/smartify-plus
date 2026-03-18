@@ -60,9 +60,12 @@ const server = createServer(async (req, res) => {
     const url = req.url || '/'
 
     // 1. Serve /_next/static/* directly — NextServer.getRequestHandler() does not
-    //    serve static files in custom-server mode (Next.js 14 known behaviour)
+    //    serve static files in custom-server mode (Next.js 14 known behaviour).
+    //    IMPORTANT: strip query string and URL-decode the pathname before fs lookup.
+    //    Browsers encode path brackets ([id] → %5Bid%5D) which breaks fs.existsSync.
     if (url.startsWith('/_next/static/')) {
-      const relPath = url.slice('/_next/static/'.length)
+      const pathname = url.split('?')[0]
+      const relPath = decodeURIComponent(pathname.slice('/_next/static/'.length))
       const filePath = path.join(__dirname, '.next', 'static', relPath)
       if (fs.existsSync(filePath) && fs.statSync(filePath).isFile()) {
         const ext = path.extname(filePath)
