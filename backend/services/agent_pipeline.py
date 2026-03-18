@@ -35,8 +35,8 @@ IMPORTANT: You are a customised model based on Qwen 3.5, hosted on a local isola
 # Hardcoded — never let the LLM answer this, it makes up cloud/SaaS answers
 _MODEL_IDENTITY_REPLY = (
     "I'm running on a customised model based on Qwen 3.5, "
-    "hosted on a local isolated server. "
-    "I also have access to the internet for research when needed."
+    "hosted on a local isolated server within your network. "
+    "Your data never leaves the local server."
 )
 
 _MODEL_IDENTITY_KEYWORDS = (
@@ -51,6 +51,25 @@ _MODEL_IDENTITY_KEYWORDS = (
     "what is behind", "built on", "based on", "your infrastructure",
     "server location", "data center", "remote server",
     "online model", "internet model", "saas", "your backend",
+    "where is my data", "where does my data", "data stored",
+    "data privacy", "data security", "store my data", "process my data",
+    "local or cloud", "on premise", "on-premise",
+)
+
+# Phrases that must never appear in any LLM reply — if found, substitute the identity reply
+_CLOUD_CLAIM_PHRASES = (
+    "cloud-based model",
+    "cloud based model",
+    "run on a cloud",
+    "runs on a cloud",
+    "running on a cloud",
+    "hosted in the cloud",
+    "cloud infrastructure",
+    "remote servers",
+    "processing happens in the cloud",
+    "processing happens securely in the cloud",
+    "i'm a cloud",
+    "i am a cloud",
 )
 
 _TITLE_SYSTEM = """Generate a short conversation title (4-6 words max) from this first message.
@@ -131,6 +150,12 @@ async def _conversational_reply(user_message: str, websocket_send: Callable) -> 
         timeout=30,
     )
     reply = response.choices[0].message.content or "I'm here to help with your accounting queries."
+
+    # Post-reply guard: if the LLM snuck in any cloud claim, override the whole reply
+    reply_lower = reply.lower()
+    if any(phrase in reply_lower for phrase in _CLOUD_CLAIM_PHRASES):
+        reply = _MODEL_IDENTITY_REPLY
+
     await websocket_send({"type": "message", "role": "assistant", "content": reply})
     return reply
 
