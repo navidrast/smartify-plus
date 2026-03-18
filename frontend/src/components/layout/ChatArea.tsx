@@ -26,7 +26,7 @@ export function ChatArea({ conversationId, onRecordSelect }: ChatAreaProps) {
     () => getMessages(conversationId!)
   )
 
-  const { events, send } = useWebSocket(conversationId)
+  const { events, send, clearEvents } = useWebSocket(conversationId)
 
   // Track active agents from events
   const activeAgents = events.reduce<Record<string, AgentEvent>>((acc, ev) => {
@@ -37,6 +37,7 @@ export function ChatArea({ conversationId, onRecordSelect }: ChatAreaProps) {
   }, {})
 
   const isPipelineRunning = events.length > 0 && !events.some((e) => e.type === 'pipeline_done')
+  const isTyping = isPipelineRunning && !events.some((e) => e.type === 'message')
 
   // Auto-scroll on new messages
   useEffect(() => {
@@ -96,12 +97,23 @@ export function ChatArea({ conversationId, onRecordSelect }: ChatAreaProps) {
           />
         ))}
 
-        {isPipelineRunning && <AgentProgress agents={activeAgents} />}
+        {isTyping && (
+          <div className="mb-4 flex justify-start">
+            <div className="rounded-2xl bg-card px-4 py-3">
+              <span className="flex gap-1">
+                <span className="h-2 w-2 animate-bounce rounded-full bg-text-muted [animation-delay:0ms]" />
+                <span className="h-2 w-2 animate-bounce rounded-full bg-text-muted [animation-delay:150ms]" />
+                <span className="h-2 w-2 animate-bounce rounded-full bg-text-muted [animation-delay:300ms]" />
+              </span>
+            </div>
+          </div>
+        )}
+        {isPipelineRunning && !isTyping && <AgentProgress agents={activeAgents} />}
       </ScrollArea>
 
       <InputBar
         conversationId={conversationId}
-        onSend={send}
+        onSend={(payload) => { clearEvents(); send(payload) }}
         onMessageSent={() => mutateMessages()}
       />
     </div>
