@@ -11,5 +11,9 @@ ENV NODE_ENV=production
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
 COPY --from=builder /app/public ./public
+# http-proxy is not bundled by Next.js standalone — install in runner
+RUN npm install http-proxy@1.18.1 --no-save --no-package-lock
+# Replace generated standalone server.js with our custom WS-proxy server
+COPY server.js ./server.js
 EXPOSE 3000
 CMD ["node", "server.js"]

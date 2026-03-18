@@ -12,10 +12,10 @@ export function useWebSocket(conversationId: string | null) {
   const connect = useCallback(() => {
     if (!conversationId || typeof window === 'undefined') return
 
-    // Derive WS URL from current browser hostname — works on any host without rebuild
+    // Connect through the same origin as the page — works behind Cloudflare/ZT
+    // The Next.js custom server proxies /ws/* to the backend internally
     const proto = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
-    const wsBase = `${proto}//${window.location.hostname}:8000`
-    const ws = new WebSocket(`${wsBase}/ws/${conversationId}`)
+    const ws = new WebSocket(`${proto}//${window.location.host}/ws/${conversationId}`)
     wsRef.current = ws
 
     ws.addEventListener('open', () => setIsConnected(true))
