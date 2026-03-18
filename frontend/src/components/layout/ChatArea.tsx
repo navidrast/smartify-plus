@@ -123,8 +123,29 @@ export function ChatArea({ conversationId, onTitleUpdate }: ChatAreaProps) {
 
       <InputBar
         conversationId={conversationId}
-        onSend={(payload) => { clearEvents(); setIsWaiting(true); send(payload) }}
-        onMessageSent={() => mutateMessages()}
+        onSend={(payload) => {
+          clearEvents()
+          setIsWaiting(true)
+          send(payload)
+          // Optimistically show the user message immediately — don't wait for DB round-trip
+          const text = (payload as { message: string }).message
+          if (text) {
+            mutateMessages(
+              (prev) => [
+                ...(prev ?? []),
+                {
+                  id: `optimistic-${Date.now()}`,
+                  conversation_id: conversationId,
+                  role: 'user' as const,
+                  content: text,
+                  created_at: new Date().toISOString(),
+                },
+              ],
+              { revalidate: false }
+            )
+          }
+        }}
+        onMessageSent={() => {}}
       />
     </div>
   )
