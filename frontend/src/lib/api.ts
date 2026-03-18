@@ -1,8 +1,8 @@
-import { API_URL } from './constants'
 import type { Conversation, Message, ExtractedRecord } from '@/types'
 
 async function fetchJSON<T>(path: string, init?: RequestInit): Promise<T> {
-  const res = await fetch(`${API_URL}${path}`, {
+  // Use relative URLs — Next.js server proxies /api/* to the backend
+  const res = await fetch(path, {
     headers: { 'Content-Type': 'application/json' },
     ...init,
   })
@@ -49,7 +49,7 @@ export async function uploadFile(
 ): Promise<{ document_id: string }> {
   return new Promise((resolve, reject) => {
     const xhr = new XMLHttpRequest()
-    xhr.open('POST', `${API_URL}/api/conversations/${conversationId}/upload`)
+    xhr.open('POST', `/api/conversations/${conversationId}/upload`)
 
     xhr.upload.addEventListener('progress', (e) => {
       if (e.lengthComputable && onProgress) {
@@ -74,5 +74,5 @@ export async function uploadFile(
 }
 
 export function getExportUrl(conversationId: string, format: 'excel' | 'pdf'): string {
-  return `${API_URL}/api/conversations/${conversationId}/export/${format}`
+  return `/api/conversations/${conversationId}/export/${format}`
 }

@@ -1,7 +1,6 @@
 'use client'
 
 import { useEffect, useRef, useState, useCallback } from 'react'
-import { WS_URL } from '@/lib/constants'
 import type { AgentEvent } from '@/types'
 
 export function useWebSocket(conversationId: string | null) {
@@ -11,9 +10,12 @@ export function useWebSocket(conversationId: string | null) {
   const [lastMessage, setLastMessage] = useState<AgentEvent | null>(null)
 
   const connect = useCallback(() => {
-    if (!conversationId) return
+    if (!conversationId || typeof window === 'undefined') return
 
-    const ws = new WebSocket(`${WS_URL}/ws/${conversationId}`)
+    // Derive WS URL from current browser hostname — works on any host without rebuild
+    const proto = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
+    const wsBase = `${proto}//${window.location.hostname}:8000`
+    const ws = new WebSocket(`${wsBase}/ws/${conversationId}`)
     wsRef.current = ws
 
     ws.addEventListener('open', () => setIsConnected(true))
