@@ -15,9 +15,10 @@ import type { Message, ExtractedRecord, AgentEvent } from '@/types'
 interface ChatAreaProps {
   conversationId: string | null
   onRecordSelect: (record: ExtractedRecord) => void
+  onTitleUpdate?: () => void
 }
 
-export function ChatArea({ conversationId, onRecordSelect }: ChatAreaProps) {
+export function ChatArea({ conversationId, onRecordSelect, onTitleUpdate }: ChatAreaProps) {
   const scrollRef = useRef<HTMLDivElement>(null)
   const [showDrop, setShowDrop] = useState(false)
   const [isWaiting, setIsWaiting] = useState(false)
@@ -57,6 +58,13 @@ export function ChatArea({ conversationId, onRecordSelect }: ChatAreaProps) {
       mutateMessages()
     }
   }, [events, mutateMessages])
+
+  // Refresh sidebar when title updates
+  useEffect(() => {
+    if (events.some((e) => e.type === 'title_update')) {
+      onTitleUpdate?.()
+    }
+  }, [events, onTitleUpdate])
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault()

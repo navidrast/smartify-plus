@@ -8,6 +8,7 @@ import uuid
 from typing import Callable
 
 from openai import AsyncOpenAI
+from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from agents.base import PipelineContext
@@ -18,6 +19,7 @@ from agents.reconciliation import ReconciliationAgent
 from agents.compliance import ComplianceAgent
 from agents.reporting import ReportingAgent
 from config import QWEN_API_BASE, QWEN_API_KEY, QWEN_TEXT_MODEL
+from models.conversation import Conversation
 from models.record import AgentEvent, ExtractedRecord
 from models.document import Message
 
@@ -26,7 +28,57 @@ logger = logging.getLogger(__name__)
 _CHAT_SYSTEM = """You are Smartify, an AI assistant for Australian accounting firms.
 You help with GST, ATO compliance, BAS preparation, invoice analysis, and accounting queries.
 Reply in plain conversational sentences — no bullet points, no bold text, no markdown, no emojis, no headers.
-Write as if texting a colleague: clear, direct, and professional."""
+Write as if texting a colleague: clear, direct, and professional.
+
+If asked what model or AI you are running on, say exactly:
+"I'm running on a customised model based on Qwen, hosted on a local isolated server. I also have access to the internet for research when needed."
+"""
+
+_TITLE_SYSTEM = """Generate a short conversation title (4-6 words max) from this first message.
+No quotes, no punctuation at the end, no generic titles like 'New Conversation' or 'Chat'.
+Be specific to the topic. Examples: GST on medical supplies, BAS lodgement deadline, Invoice missing ABN."""
+
+
+async def _generate_title(
+    user_message: str,
+    conversation_id: str,
+    db: AsyncSession,
+    websocket_send: Callable,
+) -> None:
+    """Generate a short title from the first message and update the conversation."""
+    try:
+        client = AsyncOpenAI(base_url=QWEN_API_BASE, api_key=QWEN_API_KEY)
+        response = await client.chat.completions.create(
+            model=QWEN_TEXT_MODEL,
+            messages=[
+                {"role": "system", "content": _TITLE_SYSTEM},
+                {"role": "user", "content": user_message[:500]},
+            ],
+            temperature=0.3,
+            max_tokens=20,
+            timeout=10,
+        )
+        title = (response.choices[0].message.content or "").strip().strip('"').strip("'")[:60]
+        if not title:
+            return
+        await db.execute(
+            update(Conversation)
+            .where(Conversation.id == conversation_id)
+            .values(title=title)
+        )
+        await db.commit()
+        await websocket_send({"type": "title_update", "title": title})
+    except Exception as exc:
+        logger.warning("Title generation failed: %s", exc)
+
+
+async def _needs_title(conversation_id: str, db: AsyncSession) -> bool:
+    """Return True if this conversation still has the default title."""
+    result = await db.execute(
+        select(Conversation.title).where(Conversation.id == conversation_id)
+    )
+    title = result.scalar_one_or_none()
+    return not title or title.strip().lower() in ("new conversation", "")
 
 
 async def _conversational_reply(user_message: str, websocket_send: Callable) -> str:
@@ -62,6 +114,10 @@ async def run_pipeline(
     """
     # Text-only message — no document to process
     if not file_path:
+        # Generate title before reply so sidebar updates first
+        if await _needs_title(conversation_id, db):
+            await _generate_title(user_message, conversation_id, db, websocket_send)
+
         try:
             reply = await _conversational_reply(user_message, websocket_send)
         except Exception as exc:
@@ -79,6 +135,10 @@ async def run_pipeline(
         await db.commit()
         await websocket_send({"type": "pipeline_done", "summary": {"total_records": 0, "total_amount": 0}})
         return
+
+    # Generate title for document pipeline (first message only)
+    if await _needs_title(conversation_id, db):
+        await _generate_title(user_message, conversation_id, db, websocket_send)
 
     context = PipelineContext(
         conversation_id=conversation_id,

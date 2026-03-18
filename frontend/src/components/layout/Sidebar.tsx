@@ -3,32 +3,33 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Plus, Settings, FileText, Trash2 } from 'lucide-react'
-import { useConversations } from '@/hooks/useConversations'
 import { createConversation, deleteConversation } from '@/lib/api'
 import { Button } from '@/components/ui/Button'
 import { ScrollArea } from '@/components/ui/ScrollArea'
 import { SettingsModal } from '@/components/SettingsModal'
+import type { Conversation } from '@/types'
 import { clsx } from 'clsx'
 
 interface SidebarProps {
   activeConversationId: string | null
+  conversations: Conversation[]
+  onConversationsChange: () => void
 }
 
-export function Sidebar({ activeConversationId }: SidebarProps) {
+export function Sidebar({ activeConversationId, conversations, onConversationsChange }: SidebarProps) {
   const router = useRouter()
-  const { conversations, mutate } = useConversations()
   const [showSettings, setShowSettings] = useState(false)
 
   const handleNewChat = async () => {
     const conv = await createConversation()
-    mutate()
+    onConversationsChange()
     router.push(`/chat/${conv.id}`)
   }
 
   const handleDelete = async (e: React.MouseEvent, convId: string) => {
     e.stopPropagation()
     await deleteConversation(convId)
-    mutate()
+    onConversationsChange()
     if (convId === activeConversationId) router.push('/chat')
   }
 
