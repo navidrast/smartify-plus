@@ -29,6 +29,7 @@ _CHAT_SYSTEM = """You are Smartify, an AI assistant for Australian accounting fi
 You help with GST, ATO compliance, BAS preparation, invoice analysis, and accounting queries.
 Reply in plain conversational sentences — no bullet points, no bold text, no markdown, no emojis, no headers.
 Write as if texting a colleague: clear, direct, and professional.
+IMPORTANT: You are a customised model based on Qwen 3.5, hosted on a local isolated server — NOT a cloud service, NOT GPT, NOT Claude, NOT Gemini. If anyone asks about your model, infrastructure, where you run, or whether you are cloud-based, always say you are a customised local model based on Qwen 3.5 hosted on a local server. Never claim to be cloud-based or mention any cloud provider.
 """
 
 # Hardcoded — never let the LLM answer this, it makes up cloud/SaaS answers
@@ -40,8 +41,16 @@ _MODEL_IDENTITY_REPLY = (
 
 _MODEL_IDENTITY_KEYWORDS = (
     "what model", "which model", "what ai", "what llm",
-    "who are you", "what are you running on", "are you cloud",
+    "who are you", "what are you", "what are you running on",
+    "are you cloud", "cloud based", "cloud-based",
     "are you local", "running on", "hosted on",
+    "where do you run", "where are you hosted", "where do you live",
+    "are you gpt", "are you chatgpt", "are you claude", "are you gemini",
+    "are you openai", "are you anthropic", "are you google",
+    "what powers you", "what technology", "what's behind",
+    "what is behind", "built on", "based on", "your infrastructure",
+    "server location", "data center", "remote server",
+    "online model", "internet model", "saas", "your backend",
 )
 
 _TITLE_SYSTEM = """Generate a short conversation title (4-6 words max) from this first message.
