@@ -1,0 +1,78 @@
+import { API_URL } from './constants'
+import type { Conversation, Message, ExtractedRecord } from '@/types'
+
+async function fetchJSON<T>(path: string, init?: RequestInit): Promise<T> {
+  const res = await fetch(`${API_URL}${path}`, {
+    headers: { 'Content-Type': 'application/json' },
+    ...init,
+  })
+  if (!res.ok) {
+    throw new Error(`API error ${res.status}: ${res.statusText}`)
+  }
+  return res.json()
+}
+
+export async function getConversations(): Promise<Conversation[]> {
+  return fetchJSON<Conversation[]>('/api/conversations')
+}
+
+export async function getConversation(id: string): Promise<Conversation> {
+  return fetchJSON<Conversation>(`/api/conversations/${id}`)
+}
+
+export async function createConversation(): Promise<Conversation> {
+  return fetchJSON<Conversation>('/api/conversations', { method: 'POST' })
+}
+
+export async function getMessages(conversationId: string): Promise<Message[]> {
+  return fetchJSON<Message[]>(`/api/conversations/${conversationId}/messages`)
+}
+
+export async function sendMessage(
+  conversationId: string,
+  content: string
+): Promise<Message> {
+  return fetchJSON<Message>(`/api/conversations/${conversationId}/messages`, {
+    method: 'POST',
+    body: JSON.stringify({ content }),
+  })
+}
+
+export async function getRecords(conversationId: string): Promise<ExtractedRecord[]> {
+  return fetchJSON<ExtractedRecord[]>(`/api/conversations/${conversationId}/records`)
+}
+
+export async function uploadFile(
+  conversationId: string,
+  file: File,
+  onProgress?: (pct: number) => void
+): Promise<{ document_id: string }> {
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest()
+    xhr.open('POST', `${API_URL}/api/conversations/${conversationId}/upload`)
+
+    xhr.upload.addEventListener('progress', (e) => {
+      if (e.lengthComputable && onProgress) {
+        onProgress(Math.round((e.loaded / e.total) * 100))
+      }
+    })
+
+    xhr.addEventListener('load', () => {
+      if (xhr.status >= 200 && xhr.status < 300) {
+        resolve(JSON.parse(xhr.responseText))
+      } else {
+        reject(new Error(`Upload failed: ${xhr.status}`))
+      }
+    })
+
+    xhr.addEventListener('error', () => reject(new Error('Upload network error')))
+
+    const form = new FormData()
+    form.append('file', file)
+    xhr.send(form)
+  })
+}
+
+export function getExportUrl(conversationId: string, format: 'excel' | 'pdf'): string {
+  return `${API_URL}/api/conversations/${conversationId}/export/${format}`
+}
