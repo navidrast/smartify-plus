@@ -26,7 +26,6 @@ export function Inspector({ conversationId, onClose }: InspectorProps) {
     { refreshInterval: 3000 }
   )
 
-  // Reset selection when conversation changes
   useEffect(() => {
     setSelected(null)
   }, [conversationId])
@@ -34,39 +33,31 @@ export function Inspector({ conversationId, onClose }: InspectorProps) {
   return (
     <aside className="flex h-full w-[320px] shrink-0 flex-col border-l border-border bg-card">
       {/* Header */}
-      <div className="flex items-center gap-2 border-b border-border px-4 py-4">
+      <div className="flex min-h-[56px] items-center gap-1 border-b border-border px-2">
+        {/* Close or back — 44×44 */}
         {onClose && (
           <button
             onClick={onClose}
-            className="mr-1 text-text-muted hover:text-text-primary transition-colors p-1"
+            className="flex h-11 w-11 items-center justify-center rounded-xl text-text-muted active:bg-sidebar-active active:text-text-primary"
             aria-label="Close inspector"
           >
-            <X className="h-4 w-4" />
+            <X className="h-5 w-5" />
           </button>
         )}
-        {selected && !onClose && (
+        {selected && (
           <button
             onClick={() => setSelected(null)}
-            className="mr-1 text-text-muted hover:text-text-primary transition-colors"
+            className="flex h-11 w-11 items-center justify-center rounded-xl text-text-muted active:bg-sidebar-active active:text-text-primary"
             aria-label="Back to records"
           >
-            <ChevronLeft className="h-4 w-4" />
+            <ChevronLeft className="h-5 w-5" />
           </button>
         )}
-        {selected && onClose && (
-          <button
-            onClick={() => setSelected(null)}
-            className="text-text-muted hover:text-text-primary transition-colors"
-            aria-label="Back to records"
-          >
-            <ChevronLeft className="h-4 w-4" />
-          </button>
-        )}
-        <h2 className="flex-1 text-sm font-semibold text-text-primary">
+        <h2 className="flex-1 px-1 text-sm font-semibold text-text-primary">
           {selected ? 'Record Detail' : 'Inspector'}
         </h2>
         {!selected && records.length > 0 && (
-          <span className="rounded-full bg-background px-2 py-0.5 text-xs text-text-muted">
+          <span className="mr-2 rounded-full bg-background px-2 py-0.5 text-xs text-text-muted">
             {records.length}
           </span>
         )}
@@ -84,7 +75,6 @@ export function Inspector({ conversationId, onClose }: InspectorProps) {
           )}
         </ScrollArea>
       ) : !conversationId || records.length === 0 ? (
-        /* Empty state */
         <div className="flex flex-1 flex-col items-center justify-center px-6 text-center">
           <FileSearch className="mb-3 h-8 w-8 text-text-muted" />
           <p className="text-sm text-text-muted">
@@ -94,16 +84,16 @@ export function Inspector({ conversationId, onClose }: InspectorProps) {
           </p>
         </div>
       ) : (
-        /* Records list */
         <>
           <ScrollArea className="flex-1">
             {records.map((record) => (
+              /* Each record row is a large touch target — min 56px tall */
               <button
                 key={record.id}
                 onClick={() => setSelected(record)}
-                className="group w-full border-b border-border px-4 py-3 text-left transition-colors hover:bg-background"
+                className="w-full border-b border-border px-4 py-4 text-left active:bg-sidebar-active"
               >
-                <div className="mb-1 flex items-start justify-between gap-2">
+                <div className="mb-1.5 flex items-start justify-between gap-2">
                   <span className="truncate text-sm text-text-primary">
                     {record.vendor || 'Unknown vendor'}
                   </span>
@@ -129,7 +119,6 @@ export function Inspector({ conversationId, onClose }: InspectorProps) {
             ))}
           </ScrollArea>
 
-          {/* Export always visible at bottom when records exist */}
           {conversationId && (
             <div className="border-t border-border px-4 py-4">
               <ExportButtons conversationId={conversationId} />

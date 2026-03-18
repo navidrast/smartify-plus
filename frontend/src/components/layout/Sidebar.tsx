@@ -28,8 +28,9 @@ export function Sidebar({ activeConversationId, conversations, onConversationsCh
     onClose?.()
   }
 
-  const handleDelete = async (e: React.MouseEvent, convId: string) => {
+  const handleDelete = async (e: React.MouseEvent | React.TouchEvent, convId: string) => {
     e.stopPropagation()
+    e.preventDefault()
     await deleteConversation(convId)
     onConversationsChange()
     if (convId === activeConversationId) router.push('/chat')
@@ -52,16 +53,17 @@ export function Sidebar({ activeConversationId, conversations, onConversationsCh
       {showSettings && <SettingsModal onClose={() => setShowSettings(false)} />}
 
       <aside className="flex h-full w-[260px] shrink-0 flex-col border-r border-border bg-sidebar">
-        {/* Logo + optional close button */}
-        <div className="flex items-center gap-2 px-4 py-5">
-          <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-accent text-sm font-bold text-white">
+        {/* Logo + close button */}
+        <div className="flex items-center gap-2 px-3 py-3">
+          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-accent text-sm font-bold text-white">
             S+
           </span>
           <span className="flex-1 text-base font-semibold text-text-primary">Smartify</span>
           {onClose && (
+            /* 44×44 touch target */
             <button
               onClick={onClose}
-              className="text-text-muted hover:text-text-primary transition-colors p-1"
+              className="flex h-11 w-11 items-center justify-center rounded-xl text-text-muted active:bg-sidebar-active active:text-text-primary"
               aria-label="Close menu"
             >
               <X className="h-5 w-5" />
@@ -71,55 +73,66 @@ export function Sidebar({ activeConversationId, conversations, onConversationsCh
 
         {/* New Chat */}
         <div className="px-3 pb-3">
-          <Button onClick={handleNewChat} className="w-full gap-2" size="md">
+          <Button onClick={handleNewChat} className="h-12 w-full gap-2 text-sm" size="md">
             <Plus className="h-4 w-4" />
             New Chat
           </Button>
         </div>
 
-        {/* Conversations */}
+        {/* Conversations — div+role replaces nested button-in-button (invalid HTML) */}
         <ScrollArea className="flex-1 px-2">
           {conversations
             .sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime())
             .map((conv) => (
-              <button
+              <div
                 key={conv.id}
+                role="button"
+                tabIndex={0}
                 onClick={() => {
                   router.push(`/chat/${conv.id}`)
                   onClose?.()
                 }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    router.push(`/chat/${conv.id}`)
+                    onClose?.()
+                  }
+                }}
                 className={clsx(
-                  'group flex w-full items-start gap-2 rounded-lg px-3 py-2.5 text-left transition-colors',
+                  'group flex w-full cursor-pointer items-center gap-2 rounded-xl px-3 py-3.5 text-left transition-colors',
                   conv.id === activeConversationId
                     ? 'border-l-2 border-accent bg-sidebar-active'
-                    : 'hover:bg-sidebar-active'
+                    : 'active:bg-sidebar-active'
                 )}
               >
-                <FileText className="mt-0.5 h-4 w-4 shrink-0 text-text-muted" />
+                <FileText className="h-4 w-4 shrink-0 text-text-muted" />
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm text-text-primary">{conv.title}</p>
                   <p className="text-xs text-text-muted">{formatTime(conv.updated_at)}</p>
                 </div>
+                {/* 44×44 delete button — proper element, not nested button */}
                 <button
                   onClick={(e) => handleDelete(e, conv.id)}
-                  className="ml-1 shrink-0 touch-show opacity-0 group-hover:opacity-100 text-text-muted hover:text-red-400 active:text-red-400 transition-opacity p-1"
+                  onTouchEnd={(e) => handleDelete(e, conv.id)}
+                  className="flex h-11 w-11 shrink-0 touch-show items-center justify-center rounded-xl text-text-muted opacity-0 group-hover:opacity-100 active:text-red-400"
                   aria-label="Delete conversation"
                 >
-                  <Trash2 className="h-3.5 w-3.5" />
+                  <Trash2 className="h-4 w-4" />
                 </button>
-              </button>
+              </div>
             ))}
         </ScrollArea>
 
-        {/* User */}
-        <div className="flex items-center gap-3 border-t border-border px-4 py-3">
+        {/* User / Settings */}
+        <div className="flex items-center gap-3 border-t border-border px-3 py-2">
           <div className="flex h-8 w-8 items-center justify-center rounded-full bg-card-alt text-sm font-medium text-text-secondary">
             D
           </div>
           <span className="flex-1 text-sm text-text-secondary">Demo User</span>
+          {/* 44×44 settings button */}
           <button
             onClick={() => setShowSettings(true)}
-            className="text-text-muted hover:text-text-secondary p-1"
+            className="flex h-11 w-11 items-center justify-center rounded-xl text-text-muted active:bg-sidebar-active active:text-text-primary"
             aria-label="Open settings"
           >
             <Settings className="h-4 w-4" />

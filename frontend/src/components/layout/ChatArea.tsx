@@ -87,18 +87,18 @@ export function ChatArea({ conversationId, onTitleUpdate, onMenuOpen, onInspecto
       onDragLeave={handleDragLeave}
     >
       {/* Mobile top bar — hidden on md+ */}
-      <div className="flex items-center gap-3 border-b border-border bg-sidebar px-4 py-3 md:hidden">
+      <div className="flex items-center gap-2 border-b border-border bg-sidebar px-2 py-2 md:hidden">
         <button
           onClick={onMenuOpen}
-          className="flex h-10 w-10 items-center justify-center rounded-lg text-text-muted hover:text-text-primary active:bg-sidebar-active"
+          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-text-muted active:bg-sidebar-active active:text-text-primary"
           aria-label="Open menu"
         >
           <Menu className="h-5 w-5" />
         </button>
-        <span className="flex-1 truncate text-sm font-semibold text-text-primary">{activeTitle}</span>
+        <span className="flex-1 truncate px-1 text-sm font-semibold text-text-primary">{activeTitle}</span>
         <button
           onClick={onInspectorOpen}
-          className="flex h-10 w-10 items-center justify-center rounded-lg text-text-muted hover:text-text-primary active:bg-sidebar-active"
+          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-text-muted active:bg-sidebar-active active:text-text-primary"
           aria-label="Open inspector"
         >
           <PanelRight className="h-5 w-5" />
