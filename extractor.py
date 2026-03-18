@@ -537,8 +537,8 @@ def extract_from_file(
         List of normalised extraction record dicts. Never raises — failed pages
         produce placeholder records so the UI always has something to display.
     """
-    # api_key="ollama" is a dummy value — Ollama ignores it but the client requires it
-    client = OpenAI(base_url=ollama_base_url, api_key="ollama")
+    # api_key read from env — required for cloud APIs (e.g. Qwen DashScope); "ollama" is the dummy for local
+    client = OpenAI(base_url=ollama_base_url, api_key=os.getenv("OLLAMA_API_KEY", "ollama"))
     all_records: list[dict[str, Any]] = []
 
     # Build uniform list of (label, image_b64) tuples for processing

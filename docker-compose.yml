@@ -1,64 +1,17 @@
-# Smartify Plus Phase Zero — Docker Compose
-# Two services: ollama (vision model server) + app (Streamlit UI)
+# Smartify Plus — Docker Compose (Qwen Cloud API mode)
+# Single service: app (Streamlit UI) — no local Ollama required
 #
-# First run: Ollama will download qwen2.5vl:7b (~6 GB) — allow 5–10 min
-# Subsequent runs: model is cached in the `smartify_ollama_models` volume — starts in seconds
+# Requires a .env file with:
+#   OLLAMA_API_BASE=https://dashscope.aliyuncs.com/compatible-mode/v1
+#   OLLAMA_MODEL=qwen-vl-max
+#   OLLAMA_API_KEY=sk-...
 #
 # Usage:
-#   docker-compose up --build        # first run (builds app image + pulls model)
-#   docker-compose up                # subsequent runs
-#   docker-compose down              # stop (preserves model volume)
-#   docker-compose down -v           # stop + delete model cache (forces re-download)
+#   docker compose up --build        # first run (builds app image)
+#   docker compose up                # subsequent runs
+#   docker compose down              # stop
 
 services:
-
-  # ─── Ollama vision model server ─────────────────────────────────────────────
-  ollama:
-    image: ollama/ollama:latest
-    container_name: smartify-ollama
-    ports:
-      - "11434:11434"       # Expose for direct curl testing if needed
-    volumes:
-      # Persist downloaded models across container recreations
-      - smartify_ollama_models:/root/.ollama
-    # Custom entrypoint:
-    #   1. Start ollama serve in background
-    #   2. Poll until the API is ready (avoids race condition)
-    #   3. Pull the vision model (no-op if already cached in volume)
-    #   4. Keep container alive via `wait`
-    #   NOTE: uses `ollama list` instead of curl — curl is not in the ollama image
-    entrypoint: ["/bin/sh", "-c"]
-    command: >
-      "ollama serve &
-       SERVE_PID=$$!
-       echo '[smartify] Waiting for Ollama API to become ready...'
-       until ollama list > /dev/null 2>&1; do
-         sleep 2
-       done
-       echo '[smartify] Pulling qwen2.5vl:7b (first run ~6 GB download)...'
-       ollama pull qwen2.5vl:7b
-       echo '[smartify] Model ready — Ollama is serving.'
-       wait $$SERVE_PID"
-    healthcheck:
-      # Only marked healthy once the model is actually present and serving
-      # Uses ollama list instead of curl — curl is not available in the ollama image
-      test: ["CMD-SHELL", "ollama list | grep -q 'qwen2.5vl'"]
-      interval: 15s
-      timeout: 10s
-      start_period: 600s    # Allow 10 min for initial model download on slow connections
-      retries: 40
-    restart: unless-stopped
-
-    # ── Optional: NVIDIA GPU acceleration ──────────────────────────────────
-    # Requires: nvidia-container-toolkit installed on Docker host
-    # Uncomment to enable:
-    # deploy:
-    #   resources:
-    #     reservations:
-    #       devices:
-    #         - driver: nvidia
-    #           count: all
-    #           capabilities: [gpu]
 
   # ─── Streamlit application ──────────────────────────────────────────────────
   app:
@@ -69,14 +22,8 @@ services:
     ports:
       - "8501:8501"         # Open http://localhost:8501 in browser
     environment:
-      # Docker internal DNS: use service name "ollama" instead of localhost
-      - OLLAMA_API_BASE=http://ollama:11434/v1
-      - OLLAMA_MODEL=qwen2.5vl:7b
-    depends_on:
-      ollama:
-        condition: service_healthy   # App starts ONLY after model is downloaded + ready
+      # Cloud API (Qwen DashScope — OpenAI-compatible)
+      - OLLAMA_API_BASE=${OLLAMA_API_BASE:-https://dashscope.aliyuncs.com/compatible-mode/v1}
+      - OLLAMA_MODEL=${OLLAMA_MODEL:-qwen-vl-max}
+      - OLLAMA_API_KEY=${OLLAMA_API_KEY}
     restart: unless-stopped
-
-volumes:
-  smartify_ollama_models:
-    name: smartify_ollama_models    # Explicitly named for easy docker volume inspect
