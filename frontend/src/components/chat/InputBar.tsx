@@ -39,7 +39,11 @@ export function InputBar({ conversationId, onSend, onMessageSent }: InputBarProp
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
-    await upload(file)
+    const result = await upload(file)
+    if (result?.document_id) {
+      // Trigger the agent pipeline via WebSocket with the uploaded document
+      onSend({ message: `Analyse this document: ${file.name}`, document_ids: [result.document_id] })
+    }
     onMessageSent()
     if (fileRef.current) fileRef.current.value = ''
   }

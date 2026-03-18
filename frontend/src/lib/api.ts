@@ -56,7 +56,7 @@ export async function uploadFile(
 ): Promise<{ document_id: string }> {
   return new Promise((resolve, reject) => {
     const xhr = new XMLHttpRequest()
-    xhr.open('POST', `/api/conversations/${conversationId}/upload`)
+    xhr.open('POST', `/api/upload`)
 
     xhr.upload.addEventListener('progress', (e) => {
       if (e.lengthComputable && onProgress) {
@@ -68,7 +68,7 @@ export async function uploadFile(
       if (xhr.status >= 200 && xhr.status < 300) {
         resolve(JSON.parse(xhr.responseText))
       } else {
-        reject(new Error(`Upload failed: ${xhr.status}`))
+        reject(new Error(`Upload failed: ${xhr.status} — ${xhr.responseText}`))
       }
     })
 
@@ -76,6 +76,7 @@ export async function uploadFile(
 
     const form = new FormData()
     form.append('file', file)
+    form.append('conversation_id', conversationId)
     xhr.send(form)
   })
 }
