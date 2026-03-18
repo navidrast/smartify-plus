@@ -27,6 +27,10 @@ export async function createConversation(): Promise<Conversation> {
   })
 }
 
+export async function deleteConversation(id: string): Promise<void> {
+  await fetchJSON(`/api/conversations/${id}`, { method: 'DELETE' })
+}
+
 export async function getMessages(conversationId: string): Promise<Message[]> {
   return fetchJSON<Message[]>(`/api/conversations/${conversationId}/messages`)
 }

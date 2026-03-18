@@ -26,7 +26,7 @@ export function ChatArea({ conversationId, onRecordSelect }: ChatAreaProps) {
     () => getMessages(conversationId!)
   )
 
-  const { events } = useWebSocket(conversationId)
+  const { events, send } = useWebSocket(conversationId)
 
   // Track active agents from events
   const activeAgents = events.reduce<Record<string, AgentEvent>>((acc, ev) => {
@@ -101,6 +101,7 @@ export function ChatArea({ conversationId, onRecordSelect }: ChatAreaProps) {
 
       <InputBar
         conversationId={conversationId}
+        onSend={send}
         onMessageSent={() => mutateMessages()}
       />
     </div>

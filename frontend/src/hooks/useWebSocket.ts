@@ -50,5 +50,11 @@ export function useWebSocket(conversationId: string | null) {
 
   const clearEvents = useCallback(() => setEvents([]), [])
 
-  return { events, isConnected, lastMessage, clearEvents }
+  const send = useCallback((payload: object) => {
+    if (wsRef.current?.readyState === WebSocket.OPEN) {
+      wsRef.current.send(JSON.stringify(payload))
+    }
+  }, [])
+
+  return { events, isConnected, lastMessage, clearEvents, send }
 }

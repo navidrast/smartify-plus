@@ -1,9 +1,9 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import { Plus, Settings, FileText } from 'lucide-react'
+import { Plus, Settings, FileText, Trash2 } from 'lucide-react'
 import { useConversations } from '@/hooks/useConversations'
-import { createConversation } from '@/lib/api'
+import { createConversation, deleteConversation } from '@/lib/api'
 import { Button } from '@/components/ui/Button'
 import { ScrollArea } from '@/components/ui/ScrollArea'
 import { clsx } from 'clsx'
@@ -20,6 +20,13 @@ export function Sidebar({ activeConversationId }: SidebarProps) {
     const conv = await createConversation()
     mutate()
     router.push(`/chat/${conv.id}`)
+  }
+
+  const handleDelete = async (e: React.MouseEvent, convId: string) => {
+    e.stopPropagation()
+    await deleteConversation(convId)
+    mutate()
+    if (convId === activeConversationId) router.push('/chat')
   }
 
   const formatTime = (dateStr: string) => {
@@ -61,7 +68,7 @@ export function Sidebar({ activeConversationId }: SidebarProps) {
               key={conv.id}
               onClick={() => router.push(`/chat/${conv.id}`)}
               className={clsx(
-                'flex w-full items-start gap-2 rounded-lg px-3 py-2.5 text-left transition-colors',
+                'group flex w-full items-start gap-2 rounded-lg px-3 py-2.5 text-left transition-colors',
                 conv.id === activeConversationId
                   ? 'border-l-2 border-accent bg-sidebar-active'
                   : 'hover:bg-sidebar-active'
@@ -72,6 +79,13 @@ export function Sidebar({ activeConversationId }: SidebarProps) {
                 <p className="truncate text-sm text-text-primary">{conv.title}</p>
                 <p className="text-xs text-text-muted">{formatTime(conv.updated_at)}</p>
               </div>
+              <button
+                onClick={(e) => handleDelete(e, conv.id)}
+                className="ml-1 shrink-0 opacity-0 group-hover:opacity-100 text-text-muted hover:text-red-400 transition-opacity"
+                aria-label="Delete conversation"
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+              </button>
             </button>
           ))}
       </ScrollArea>

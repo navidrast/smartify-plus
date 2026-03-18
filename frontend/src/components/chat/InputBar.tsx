@@ -2,15 +2,15 @@
 
 import { useState, useRef, useCallback } from 'react'
 import { Paperclip, ArrowUp } from 'lucide-react'
-import { sendMessage } from '@/lib/api'
 import { useUpload } from '@/hooks/useUpload'
 
 interface InputBarProps {
   conversationId: string
+  onSend: (payload: object) => void
   onMessageSent: () => void
 }
 
-export function InputBar({ conversationId, onMessageSent }: InputBarProps) {
+export function InputBar({ conversationId, onSend, onMessageSent }: InputBarProps) {
   const [text, setText] = useState('')
   const [sending, setSending] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
@@ -21,13 +21,13 @@ export function InputBar({ conversationId, onMessageSent }: InputBarProps) {
     if (!trimmed || sending) return
     setSending(true)
     try {
-      await sendMessage(conversationId, trimmed)
+      onSend({ message: trimmed, document_ids: [] })
       setText('')
       onMessageSent()
     } finally {
       setSending(false)
     }
-  }, [text, sending, conversationId, onMessageSent])
+  }, [text, sending, onSend, onMessageSent])
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
