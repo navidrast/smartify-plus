@@ -1,5 +1,6 @@
 # ─── Core UI ──────────────────────────────────────────────────────────────────
-streamlit==1.44.0
+# 1.51.0 is minimum version supporting Pillow>=12 (required for GHSA-cfh3-3jmp-rvhc patch)
+streamlit==1.51.0
 
 # ─── Ollama / OpenAI-compatible client ───────────────────────────────────────
 openai==1.68.2
