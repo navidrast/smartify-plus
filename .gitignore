@@ -1,0 +1,28 @@
+# Environment
+.env
+*.env
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+venv/
+env/
+*.egg-info/
+dist/
+build/
+
+# Test outputs
+test_output.xlsx
+test_output.pdf
+
+# macOS
+.DS_Store
+
+# Streamlit
+.streamlit/
+
+# Temp files
+smartify_*.png
+smartify_*.pdf
