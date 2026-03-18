@@ -20,6 +20,7 @@ interface ChatAreaProps {
 export function ChatArea({ conversationId, onRecordSelect }: ChatAreaProps) {
   const scrollRef = useRef<HTMLDivElement>(null)
   const [showDrop, setShowDrop] = useState(false)
+  const [isWaiting, setIsWaiting] = useState(false)
 
   const { data: messages, mutate: mutateMessages } = useSWR<Message[]>(
     conversationId ? `/api/conversations/${conversationId}/messages` : null,
@@ -37,7 +38,13 @@ export function ChatArea({ conversationId, onRecordSelect }: ChatAreaProps) {
   }, {})
 
   const isPipelineRunning = events.length > 0 && !events.some((e) => e.type === 'pipeline_done')
-  const isTyping = isPipelineRunning && !events.some((e) => e.type === 'message')
+
+  // When pipeline_done or a message event arrives, stop the waiting indicator
+  useEffect(() => {
+    if (events.some((e) => e.type === 'pipeline_done' || e.type === 'message')) {
+      setIsWaiting(false)
+    }
+  }, [events])
 
   // Auto-scroll on new messages
   useEffect(() => {
@@ -97,7 +104,7 @@ export function ChatArea({ conversationId, onRecordSelect }: ChatAreaProps) {
           />
         ))}
 
-        {isTyping && (
+        {isWaiting && (
           <div className="mb-4 flex justify-start">
             <div className="rounded-2xl bg-card px-4 py-3">
               <span className="flex gap-1">
@@ -108,12 +115,12 @@ export function ChatArea({ conversationId, onRecordSelect }: ChatAreaProps) {
             </div>
           </div>
         )}
-        {isPipelineRunning && !isTyping && <AgentProgress agents={activeAgents} />}
+        {isPipelineRunning && !isWaiting && <AgentProgress agents={activeAgents} />}
       </ScrollArea>
 
       <InputBar
         conversationId={conversationId}
-        onSend={(payload) => { clearEvents(); send(payload) }}
+        onSend={(payload) => { clearEvents(); setIsWaiting(true); send(payload) }}
         onMessageSent={() => mutateMessages()}
       />
     </div>

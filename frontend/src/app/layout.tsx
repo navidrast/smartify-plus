@@ -9,6 +9,15 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: `
+          (function() {
+            var t = localStorage.getItem('smartify-theme') || 'dark';
+            var r = t === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : t;
+            document.documentElement.classList.add(r === 'light' ? 'light' : 'dark');
+          })();
+        `}} />
+      </head>
       <body className="h-screen w-screen overflow-hidden">{children}</body>
     </html>
   )

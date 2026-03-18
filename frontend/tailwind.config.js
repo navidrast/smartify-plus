@@ -1,19 +1,20 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
   content: ['./src/**/*.{ts,tsx}'],
+  darkMode: 'class',
   theme: {
     extend: {
       colors: {
-        background: '#111111',
-        card: '#1A1A1A',
-        'card-alt': '#222222',
-        sidebar: '#18181b',
-        'sidebar-active': '#2a2a30',
-        border: '#2E2E2E',
+        background: 'var(--color-bg)',
+        card: 'var(--color-card)',
+        'card-alt': 'var(--color-card-alt)',
+        sidebar: 'var(--color-sidebar)',
+        'sidebar-active': 'var(--color-sidebar-active)',
+        border: 'var(--color-border)',
         accent: '#FF8400',
-        'text-primary': '#FFFFFF',
-        'text-secondary': '#B8B9B6',
-        'text-muted': '#666666',
+        'text-primary': 'var(--color-text-primary)',
+        'text-secondary': 'var(--color-text-secondary)',
+        'text-muted': 'var(--color-text-muted)',
         'gst-10': '#4ade80',
         'gst-10-bg': '#222924',
         'gst-unknown': '#FF8400',
