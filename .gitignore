@@ -26,3 +26,10 @@ test_output.pdf
 # Temp files
 smartify_*.png
 smartify_*.pdf
+
+# Backend
+backend/smartify.db
+
+# Frontend
+frontend/.next
+frontend/node_modules
