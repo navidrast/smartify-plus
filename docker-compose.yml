@@ -1,7 +1,7 @@
 # Smartify Plus Phase Zero — Docker Compose
 # Two services: ollama (vision model server) + app (Streamlit UI)
 #
-# First run: Ollama will download qwen2.5-vl:7b-instruct (~5 GB) — allow 5–10 min
+# First run: Ollama will download qwen2.5vl:7b (~6 GB) — allow 5–10 min
 # Subsequent runs: model is cached in the `smartify_ollama_models` volume — starts in seconds
 #
 # Usage:
@@ -35,14 +35,14 @@ services:
        until ollama list > /dev/null 2>&1; do
          sleep 2
        done
-       echo '[smartify] Pulling qwen2.5-vl:7b-instruct (first run ~5 GB download)...'
-       ollama pull qwen2.5-vl:7b-instruct
+       echo '[smartify] Pulling qwen2.5vl:7b (first run ~6 GB download)...'
+       ollama pull qwen2.5vl:7b
        echo '[smartify] Model ready — Ollama is serving.'
        wait $$SERVE_PID"
     healthcheck:
       # Only marked healthy once the model is actually present and serving
       # Uses ollama list instead of curl — curl is not available in the ollama image
-      test: ["CMD-SHELL", "ollama list | grep -q 'qwen2.5-vl'"]
+      test: ["CMD-SHELL", "ollama list | grep -q 'qwen2.5vl'"]
       interval: 15s
       timeout: 10s
       start_period: 600s    # Allow 10 min for initial model download on slow connections
@@ -71,7 +71,7 @@ services:
     environment:
       # Docker internal DNS: use service name "ollama" instead of localhost
       - OLLAMA_API_BASE=http://ollama:11434/v1
-      - OLLAMA_MODEL=qwen2.5-vl:7b-instruct
+      - OLLAMA_MODEL=qwen2.5vl:7b
     depends_on:
       ollama:
         condition: service_healthy   # App starts ONLY after model is downloaded + ready
