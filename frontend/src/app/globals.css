@@ -37,11 +37,21 @@
     font-family: 'JetBrains Mono', ui-monospace, monospace;
     background-color: var(--color-bg);
     color: var(--color-text-primary);
+    /* Prevent iOS bounce scroll at root */
+    overscroll-behavior: none;
   }
 
   body {
     @apply bg-background text-text-primary;
     overflow: hidden;
+    /* Remove tap highlight on mobile */
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Touch momentum scrolling for all scroll containers */
+  .overflow-y-auto {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
   }
 
   * {
@@ -51,4 +61,17 @@
   *::-webkit-scrollbar { width: 6px; }
   *::-webkit-scrollbar-track { background: var(--color-bg); }
   *::-webkit-scrollbar-thumb { background: var(--color-border); border-radius: 3px; }
+
+  /* On touch devices (no hover), always show delete buttons */
+  @media (hover: none) {
+    .touch-show { opacity: 1 !important; }
+  }
+
+  /* Safe area padding utilities */
+  .pb-safe {
+    padding-bottom: max(12px, env(safe-area-inset-bottom));
+  }
+  .pt-safe {
+    padding-top: env(safe-area-inset-top);
+  }
 }

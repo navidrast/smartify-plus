@@ -102,7 +102,7 @@ export function Sidebar({ activeConversationId, conversations, onConversationsCh
                 </div>
                 <button
                   onClick={(e) => handleDelete(e, conv.id)}
-                  className="ml-1 shrink-0 opacity-0 group-hover:opacity-100 text-text-muted hover:text-red-400 transition-opacity"
+                  className="ml-1 shrink-0 touch-show opacity-0 group-hover:opacity-100 text-text-muted hover:text-red-400 active:text-red-400 transition-opacity p-1"
                   aria-label="Delete conversation"
                 >
                   <Trash2 className="h-3.5 w-3.5" />

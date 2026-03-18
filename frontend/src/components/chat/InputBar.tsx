@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef, useCallback } from 'react'
+import { useState, useRef, useCallback, useEffect } from 'react'
 import { Paperclip, ArrowUp } from 'lucide-react'
 import { useUpload } from '@/hooks/useUpload'
 
@@ -14,7 +14,20 @@ export function InputBar({ conversationId, onSend, onMessageSent }: InputBarProp
   const [text, setText] = useState('')
   const [sending, setSending] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
   const { upload, isUploading } = useUpload(conversationId)
+
+  // Auto-grow textarea up to 5 lines
+  const adjustHeight = useCallback(() => {
+    const el = textareaRef.current
+    if (!el) return
+    el.style.height = 'auto'
+    el.style.height = `${Math.min(el.scrollHeight, 140)}px`
+  }, [])
+
+  useEffect(() => {
+    adjustHeight()
+  }, [text, adjustHeight])
 
   const handleSend = useCallback(async () => {
     const trimmed = text.trim()
@@ -23,6 +36,7 @@ export function InputBar({ conversationId, onSend, onMessageSent }: InputBarProp
     try {
       onSend({ message: trimmed, document_ids: [] })
       setText('')
+      if (textareaRef.current) textareaRef.current.style.height = 'auto'
       onMessageSent()
     } finally {
       setSending(false)
@@ -41,7 +55,6 @@ export function InputBar({ conversationId, onSend, onMessageSent }: InputBarProp
     if (!file) return
     const result = await upload(file)
     if (result?.document_id) {
-      // Trigger the agent pipeline via WebSocket with the uploaded document
       onSend({ message: `Analyse this document: ${file.name}`, document_ids: [result.document_id] })
     }
     onMessageSent()
@@ -49,12 +62,13 @@ export function InputBar({ conversationId, onSend, onMessageSent }: InputBarProp
   }
 
   return (
-    <div className="border-t border-border bg-background px-4 py-3 md:px-6 md:py-4">
-      <div className="flex items-end gap-3 rounded-xl border border-border bg-card px-4 py-3">
+    /* pb-safe applies env(safe-area-inset-bottom) for iPhone home bar */
+    <div className="border-t border-border bg-background px-3 pt-3 pb-safe md:px-6 md:pt-4">
+      <div className="flex items-end gap-2 rounded-2xl border border-border bg-card px-3 py-2.5">
         <button
           onClick={() => fileRef.current?.click()}
           disabled={isUploading}
-          className="flex min-h-[44px] min-w-[44px] shrink-0 items-center justify-center text-text-muted transition-colors hover:text-text-secondary disabled:opacity-50"
+          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-text-muted transition-colors active:bg-sidebar-active disabled:opacity-40 md:h-9 md:w-9"
           aria-label="Attach file"
         >
           <Paperclip className="h-5 w-5" />
@@ -67,17 +81,19 @@ export function InputBar({ conversationId, onSend, onMessageSent }: InputBarProp
           onChange={handleFileChange}
         />
         <textarea
+          ref={textareaRef}
           value={text}
           onChange={(e) => setText(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder="Type a message or drop a file..."
+          placeholder="Message Smartify..."
           rows={1}
-          className="max-h-32 flex-1 resize-none bg-transparent text-sm text-text-primary placeholder:text-text-muted focus:outline-none"
+          style={{ fontSize: '16px' }} /* Prevents iOS auto-zoom on focus */
+          className="max-h-[140px] flex-1 resize-none bg-transparent leading-relaxed text-text-primary placeholder:text-text-muted focus:outline-none md:text-sm"
         />
         <button
           onClick={handleSend}
           disabled={!text.trim() || sending}
-          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-accent text-white transition-opacity disabled:opacity-40 md:h-8 md:w-8"
+          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-accent text-white transition-opacity active:opacity-70 disabled:opacity-30 md:h-8 md:w-8"
           aria-label="Send message"
         >
           <ArrowUp className="h-4 w-4" />

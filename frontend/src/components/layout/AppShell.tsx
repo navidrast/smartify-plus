@@ -56,25 +56,33 @@ export function AppShell({ conversationId }: AppShellProps) {
         />
       </div>
 
-      {/* ── Mobile sidebar drawer ── */}
-      {sidebarOpen && (
-        <div className="fixed inset-0 z-50 md:hidden">
-          {/* Backdrop */}
-          <div
-            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-            onClick={() => setSidebarOpen(false)}
+      {/* ── Mobile sidebar drawer — always in DOM, slides in/out ── */}
+      <div
+        className={`fixed inset-0 z-50 md:hidden transition-all duration-300 ${
+          sidebarOpen ? 'visible' : 'invisible'
+        }`}
+      >
+        {/* Backdrop */}
+        <div
+          className={`absolute inset-0 bg-black/60 transition-opacity duration-300 ${
+            sidebarOpen ? 'opacity-100' : 'opacity-0'
+          }`}
+          onClick={() => setSidebarOpen(false)}
+        />
+        {/* Drawer slides in from left */}
+        <div
+          className={`absolute left-0 top-0 h-full w-[280px] shadow-2xl transition-transform duration-300 ${
+            sidebarOpen ? 'translate-x-0' : '-translate-x-full'
+          }`}
+        >
+          <Sidebar
+            activeConversationId={conversationId}
+            conversations={conversations}
+            onConversationsChange={mutateConversations}
+            onClose={() => setSidebarOpen(false)}
           />
-          {/* Drawer */}
-          <div className="absolute left-0 top-0 h-full w-[280px] shadow-2xl">
-            <Sidebar
-              activeConversationId={conversationId}
-              conversations={conversations}
-              onConversationsChange={mutateConversations}
-              onClose={() => setSidebarOpen(false)}
-            />
-          </div>
         </div>
-      )}
+      </div>
 
       {/* ── Chat (always visible, full width on mobile) ── */}
       <ChatArea
@@ -90,23 +98,31 @@ export function AppShell({ conversationId }: AppShellProps) {
         <Inspector conversationId={conversationId} />
       </div>
 
-      {/* ── Mobile inspector drawer ── */}
-      {inspectorOpen && (
-        <div className="fixed inset-0 z-50 md:hidden">
-          {/* Backdrop */}
-          <div
-            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-            onClick={() => setInspectorOpen(false)}
+      {/* ── Mobile inspector drawer — always in DOM, slides in from right ── */}
+      <div
+        className={`fixed inset-0 z-50 md:hidden transition-all duration-300 ${
+          inspectorOpen ? 'visible' : 'invisible'
+        }`}
+      >
+        {/* Backdrop */}
+        <div
+          className={`absolute inset-0 bg-black/60 transition-opacity duration-300 ${
+            inspectorOpen ? 'opacity-100' : 'opacity-0'
+          }`}
+          onClick={() => setInspectorOpen(false)}
+        />
+        {/* Drawer slides in from right */}
+        <div
+          className={`absolute right-0 top-0 h-full w-[min(320px,100vw)] shadow-2xl transition-transform duration-300 ${
+            inspectorOpen ? 'translate-x-0' : 'translate-x-full'
+          }`}
+        >
+          <Inspector
+            conversationId={conversationId}
+            onClose={() => setInspectorOpen(false)}
           />
-          {/* Drawer from right */}
-          <div className="absolute right-0 top-0 h-full w-[min(320px,100vw)] shadow-2xl">
-            <Inspector
-              conversationId={conversationId}
-              onClose={() => setInspectorOpen(false)}
-            />
-          </div>
         </div>
-      )}
+      </div>
     </div>
   )
 }
