@@ -8,7 +8,8 @@ openai==1.68.2
 pymupdf==1.25.3
 
 # ─── Image processing ────────────────────────────────────────────────────────
-Pillow==11.1.0
+# 12.1.1 patches GHSA-cfh3-3jmp-rvhc (out-of-bounds write on PSD load, high severity)
+Pillow==12.1.1
 
 # ─── Data manipulation and Excel export ──────────────────────────────────────
 pandas==2.2.3
