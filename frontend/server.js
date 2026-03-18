@@ -1,12 +1,14 @@
 'use strict'
 
 /**
- * Custom Next.js standalone server with WebSocket proxy.
+ * Custom Next.js standalone server with WebSocket proxy + API proxy.
  *
- * Next.js rewrites handle HTTP /api/* → backend.
- * This server adds WebSocket upgrade handling: /ws/* → backend.
- * Both flows go through a single port (3000) so Cloudflare Tunnel
- * only needs one ingress rule and Zero Trust works end-to-end.
+ * Next.js rewrites do not apply reliably in custom-server mode (Next.js 14).
+ * This server handles both concerns explicitly:
+ *   - /_next/static/* → streamed from .next/static/ (bypasses broken static serving)
+ *   - /api/*          → proxied to backend via http-proxy (bypasses broken rewrites)
+ *   - /ws/*           → WebSocket upgrade proxied to backend
+ *   - everything else → Next.js request handler
  */
 
 const fs = require('fs')
@@ -26,53 +28,41 @@ process.chdir(__dirname)
 
 const NextServer = require('./node_modules/next/dist/server/next-server').default
 
-// Proxy WebSocket /ws/* connections to backend
-const wsProxy = httpProxy.createProxyServer({
+// Single proxy instance handles both HTTP /api/* and WS /ws/*
+const proxy = httpProxy.createProxyServer({
   target: backendUrl,
-  ws: true,
   changeOrigin: true,
 })
-wsProxy.on('error', (err, _req, socket) => {
-  console.error('[ws-proxy error]', err.message)
-  if (socket && typeof socket.destroy === 'function') socket.destroy()
+proxy.on('error', (err, _req, res) => {
+  console.error('[proxy error]', err.message)
+  if (res && typeof res.end === 'function') {
+    res.statusCode = 502
+    res.end('Bad Gateway')
+  }
 })
 
 const MIME = {
-  '.js':   'application/javascript',
-  '.css':  'text/css',
-  '.json': 'application/json',
-  '.png':  'image/png',
-  '.jpg':  'image/jpeg',
-  '.svg':  'image/svg+xml',
-  '.ico':  'image/x-icon',
-  '.woff': 'font/woff',
+  '.js':    'application/javascript',
+  '.css':   'text/css',
+  '.json':  'application/json',
+  '.png':   'image/png',
+  '.jpg':   'image/jpeg',
+  '.svg':   'image/svg+xml',
+  '.ico':   'image/x-icon',
+  '.woff':  'font/woff',
   '.woff2': 'font/woff2',
-}
-
-// Serve /_next/static/* directly from .next/static/ (Next.js
-// standalone's NextServer handler sometimes misses these in custom-server mode)
-function serveNextStatic(req, res) {
-  const relPath = req.url.replace(/^\/(_next\/static\/)/, '$1')
-  const filePath = path.join(__dirname, '.next', 'static', relPath.replace(/^_next\/static\//, ''))
-  fs.stat(filePath, (statErr, stat) => {
-    if (statErr || !stat.isFile()) return false
-    const ext = path.extname(filePath)
-    res.setHeader('Content-Type', MIME[ext] || 'application/octet-stream')
-    res.setHeader('Cache-Control', 'public, max-age=31536000, immutable')
-    res.statusCode = 200
-    fs.createReadStream(filePath).pipe(res)
-    return true
-  })
-  return null // async — we return null to signal "maybe"
 }
 
 let reqHandler
 
 const server = createServer(async (req, res) => {
   try {
-    // Fast-path: serve _next/static files before handing off to Next.js
-    if (req.url && req.url.startsWith('/_next/static/')) {
-      const relPath = req.url.replace(/^\/(_next\/static\/)/, '').replace(/^_next\/static\//, '')
+    const url = req.url || '/'
+
+    // 1. Serve /_next/static/* directly — NextServer.getRequestHandler() does not
+    //    serve static files in custom-server mode (Next.js 14 known behaviour)
+    if (url.startsWith('/_next/static/')) {
+      const relPath = url.slice('/_next/static/'.length)
       const filePath = path.join(__dirname, '.next', 'static', relPath)
       if (fs.existsSync(filePath) && fs.statSync(filePath).isFile()) {
         const ext = path.extname(filePath)
@@ -83,6 +73,14 @@ const server = createServer(async (req, res) => {
         return
       }
     }
+
+    // 2. Proxy /api/* to backend — Next.js rewrites do not apply in custom-server mode
+    if (url.startsWith('/api/')) {
+      proxy.web(req, res)
+      return
+    }
+
+    // 3. Everything else goes to Next.js (page routes, RSC, etc.)
     await reqHandler(req, res)
   } catch (err) {
     console.error('[server error]', err)
@@ -94,7 +92,7 @@ const server = createServer(async (req, res) => {
 // Intercept WebSocket upgrade requests and proxy them to the backend
 server.on('upgrade', (req, socket, head) => {
   if (req.url && req.url.startsWith('/ws/')) {
-    wsProxy.ws(req, socket, head)
+    proxy.ws(req, socket, head)
   } else {
     socket.destroy()
   }
