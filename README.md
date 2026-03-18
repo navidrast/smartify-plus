@@ -9,7 +9,7 @@
 
 | Input | Processing | Output |
 |-------|-----------|--------|
-| Receipt (PDF/PNG/JPG) | Ollama `qwen2.5-vl:7b-instruct` vision model | Excel `.xlsx` (2 sheets) |
+| Receipt (PDF/PNG/JPG) | Ollama `qwen2.5vl:7b` vision model | Excel `.xlsx` (2 sheets) |
 | Invoice (scanned/handwritten) | Strict JSON schema extraction | PDF report (landscape A4) |
 | Bank statement PDF (multi-page) | ATO GST keyword cross-check | Colour-coded GST summary |
 | Any messy/blurry scan | Tesseract OCR fallback if vision fails | Per-record confidence scores |
@@ -19,7 +19,7 @@
 ## Quickstart (Docker)
 
 ```bash
-# First run — downloads qwen2.5-vl:7b-instruct (~5 GB, allow 5–10 min)
+# First run — downloads qwen2.5vl:7b (~5 GB, allow 5–10 min)
 docker-compose up --build
 
 # Open in browser
@@ -37,7 +37,7 @@ open http://localhost:8501
 brew install ollama tesseract          # macOS
 # OR: apt install ollama tesseract-ocr tesseract-ocr-eng  # Ubuntu
 
-ollama pull qwen2.5-vl:7b-instruct
+ollama pull qwen2.5vl:7b
 ollama serve &
 
 python -m venv .venv && source .venv/bin/activate
@@ -65,7 +65,7 @@ User → Streamlit (app.py)
   → extractor.py
       PDF  → PyMuPDF → PNG per page → base64
       Image → Pillow → PNG buffer → base64
-      → Ollama vision API (qwen2.5-vl:7b-instruct)
+      → Ollama vision API (qwen2.5vl:7b)
       → JSON parse + normalise + GST classify
       → Tesseract OCR fallback (if vision fails)
   → output.py

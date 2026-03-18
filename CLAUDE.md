@@ -28,7 +28,7 @@ Name:    Smartify Plus Phase Zero
 Repo:    https://github.com/navidrast/smartify-plus
 Local:   ~/projects/smartify-plus  (Mac)  |  ~/projects/smartify-plus  (Linux CT)
 Branch:  main
-Stack:   Python 3.12, Streamlit, Ollama qwen2.5-vl:7b-instruct, PyMuPDF, ReportLab
+Stack:   Python 3.12, Streamlit, Ollama qwen2.5vl:7b, PyMuPDF, ReportLab
 Purpose: Upload receipt/invoice/bank PDF → AI extracts JSON → ATO GST rules → Excel + PDF download
 ```
 
@@ -164,7 +164,7 @@ vault__append_note  projects/smartify-plus/mistakes  ← if something broke (roo
 cd ~/projects/smartify-plus
 docker-compose up --build
 # Access: http://localhost:8501
-# First run: ~5–10 min for qwen2.5-vl:7b-instruct download (~5 GB)
+# First run: ~5–10 min for qwen2.5vl:7b download (~5 GB)
 ```
 
 ### Target 2: Mac Studio on-prem (future Phase One)
@@ -196,7 +196,7 @@ docker-compose up --build -d
 ollama list
 
 # Pull primary model (~5 GB)
-ollama pull qwen2.5-vl:7b-instruct
+ollama pull qwen2.5vl:7b
 
 # Pull lighter model for CPU-only testing (~2 GB)
 ollama pull qwen2.5-vl:3b-instruct
@@ -221,8 +221,8 @@ Fix:   ollama serve  (or docker-compose up ollama)
 
 ### Model not found (404)
 ```
-Error: model 'qwen2.5-vl:7b-instruct' not found
-Fix:   ollama pull qwen2.5-vl:7b-instruct
+Error: model 'qwen2.5vl:7b' not found
+Fix:   ollama pull qwen2.5vl:7b
 ```
 
 ### PyMuPDF import error

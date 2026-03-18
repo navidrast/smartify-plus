@@ -126,7 +126,7 @@ If this fails → fix requirements.txt or output.py before proceeding.
 curl -s http://localhost:11434/api/tags | python3 -m json.tool
 
 # Pull model if not present
-ollama list | grep qwen2.5-vl || ollama pull qwen2.5-vl:7b-instruct
+ollama list | grep qwen2.5-vl || ollama pull qwen2.5vl:7b
 
 # Set env and run
 cp .env.example .env
