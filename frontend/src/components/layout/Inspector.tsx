@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import useSWR from 'swr'
-import { ChevronLeft, FileSearch } from 'lucide-react'
+import { ChevronLeft, FileSearch, X } from 'lucide-react'
 import { getRecords } from '@/lib/api'
 import { RecordDetail } from '@/components/inspector/RecordDetail'
 import { AgentNotes } from '@/components/inspector/AgentNotes'
@@ -14,9 +14,10 @@ import type { ExtractedRecord } from '@/types'
 
 interface InspectorProps {
   conversationId: string | null
+  onClose?: () => void
 }
 
-export function Inspector({ conversationId }: InspectorProps) {
+export function Inspector({ conversationId, onClose }: InspectorProps) {
   const [selected, setSelected] = useState<ExtractedRecord | null>(null)
 
   const { data: records = [] } = useSWR<ExtractedRecord[]>(
@@ -34,10 +35,28 @@ export function Inspector({ conversationId }: InspectorProps) {
     <aside className="flex h-full w-[320px] shrink-0 flex-col border-l border-border bg-card">
       {/* Header */}
       <div className="flex items-center gap-2 border-b border-border px-4 py-4">
-        {selected && (
+        {onClose && (
+          <button
+            onClick={onClose}
+            className="mr-1 text-text-muted hover:text-text-primary transition-colors p-1"
+            aria-label="Close inspector"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        )}
+        {selected && !onClose && (
           <button
             onClick={() => setSelected(null)}
             className="mr-1 text-text-muted hover:text-text-primary transition-colors"
+            aria-label="Back to records"
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </button>
+        )}
+        {selected && onClose && (
+          <button
+            onClick={() => setSelected(null)}
+            className="text-text-muted hover:text-text-primary transition-colors"
             aria-label="Back to records"
           >
             <ChevronLeft className="h-4 w-4" />

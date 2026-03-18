@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, useCallback } from 'react'
 import useSWR from 'swr'
-import { Upload } from 'lucide-react'
+import { Upload, Menu, PanelRight } from 'lucide-react'
 import { getMessages } from '@/lib/api'
 import { useWebSocket } from '@/hooks/useWebSocket'
 import { MessageBubble } from '@/components/chat/MessageBubble'
@@ -10,14 +10,17 @@ import { AgentProgress } from '@/components/chat/AgentProgress'
 import { InputBar } from '@/components/chat/InputBar'
 import { UploadZone } from '@/components/chat/UploadZone'
 import { ScrollArea } from '@/components/ui/ScrollArea'
-import type { Message, AgentEvent } from '@/types'
+import type { Message, AgentEvent, Conversation } from '@/types'
 
 interface ChatAreaProps {
   conversationId: string | null
   onTitleUpdate?: () => void
+  onMenuOpen?: () => void
+  onInspectorOpen?: () => void
+  conversations?: Conversation[]
 }
 
-export function ChatArea({ conversationId, onTitleUpdate }: ChatAreaProps) {
+export function ChatArea({ conversationId, onTitleUpdate, onMenuOpen, onInspectorOpen, conversations = [] }: ChatAreaProps) {
   const scrollRef = useRef<HTMLDivElement>(null)
   const [showDrop, setShowDrop] = useState(false)
   const [isWaiting, setIsWaiting] = useState(false)
@@ -72,81 +75,105 @@ export function ChatArea({ conversationId, onTitleUpdate }: ChatAreaProps) {
 
   const handleDragLeave = useCallback(() => setShowDrop(false), [])
 
-  if (!conversationId) {
-    return (
-      <div className="flex flex-1 flex-col items-center justify-center bg-background">
-        <Upload className="mb-4 h-12 w-12 text-text-muted" />
-        <h2 className="mb-2 text-lg font-medium text-text-primary">
-          Upload a receipt or invoice to get started
-        </h2>
-        <p className="text-sm text-text-muted">
-          Create a new chat to begin extracting data from your documents
-        </p>
-      </div>
-    )
-  }
+  // Get title for mobile header
+  const activeTitle = conversationId
+    ? (conversations.find((c) => c.id === conversationId)?.title ?? 'Chat')
+    : 'Smartify'
 
   return (
     <div
-      className="relative flex flex-1 flex-col bg-background"
+      className="relative flex flex-1 flex-col bg-background min-w-0"
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
     >
-      {showDrop && (
-        <UploadZone
-          conversationId={conversationId}
-          onDone={() => {
-            setShowDrop(false)
-            mutateMessages()
-          }}
-        />
+      {/* Mobile top bar — hidden on md+ */}
+      <div className="flex items-center gap-3 border-b border-border bg-sidebar px-4 py-3 md:hidden">
+        <button
+          onClick={onMenuOpen}
+          className="flex h-10 w-10 items-center justify-center rounded-lg text-text-muted hover:text-text-primary active:bg-sidebar-active"
+          aria-label="Open menu"
+        >
+          <Menu className="h-5 w-5" />
+        </button>
+        <span className="flex-1 truncate text-sm font-semibold text-text-primary">{activeTitle}</span>
+        <button
+          onClick={onInspectorOpen}
+          className="flex h-10 w-10 items-center justify-center rounded-lg text-text-muted hover:text-text-primary active:bg-sidebar-active"
+          aria-label="Open inspector"
+        >
+          <PanelRight className="h-5 w-5" />
+        </button>
+      </div>
+
+      {!conversationId ? (
+        <div className="flex flex-1 flex-col items-center justify-center bg-background px-6">
+          <Upload className="mb-4 h-12 w-12 text-text-muted" />
+          <h2 className="mb-2 text-center text-lg font-medium text-text-primary">
+            Upload a receipt or invoice to get started
+          </h2>
+          <p className="text-center text-sm text-text-muted">
+            Create a new chat to begin extracting data from your documents
+          </p>
+        </div>
+      ) : (
+        <>
+          {showDrop && (
+            <UploadZone
+              conversationId={conversationId}
+              onDone={() => {
+                setShowDrop(false)
+                mutateMessages()
+              }}
+            />
+          )}
+
+          <ScrollArea ref={scrollRef} className="flex-1 px-4 py-4 md:px-6">
+            {messages?.map((msg) => (
+              <MessageBubble key={msg.id} message={msg} />
+            ))}
+
+            {isWaiting && (
+              <div className="mb-4 flex justify-start">
+                <div className="rounded-2xl bg-card px-4 py-3">
+                  <span className="flex gap-1">
+                    <span className="h-2 w-2 animate-bounce rounded-full bg-text-muted [animation-delay:0ms]" />
+                    <span className="h-2 w-2 animate-bounce rounded-full bg-text-muted [animation-delay:150ms]" />
+                    <span className="h-2 w-2 animate-bounce rounded-full bg-text-muted [animation-delay:300ms]" />
+                  </span>
+                </div>
+              </div>
+            )}
+            {isPipelineRunning && !isWaiting && <AgentProgress agents={activeAgents} />}
+          </ScrollArea>
+
+          <InputBar
+            conversationId={conversationId}
+            onSend={(payload) => {
+              clearEvents()
+              setIsWaiting(true)
+              send(payload)
+              // Optimistically show the user message immediately — don't wait for DB round-trip
+              const text = (payload as { message: string }).message
+              if (text) {
+                mutateMessages(
+                  (prev) => [
+                    ...(prev ?? []),
+                    {
+                      id: `optimistic-${Date.now()}`,
+                      conversation_id: conversationId,
+                      role: 'user' as const,
+                      content: text,
+                      created_at: new Date().toISOString(),
+                    },
+                  ],
+                  { revalidate: false }
+                )
+              }
+            }}
+            onMessageSent={() => {}}
+          />
+        </>
       )}
-
-      <ScrollArea ref={scrollRef} className="flex-1 px-6 py-4">
-        {messages?.map((msg) => (
-          <MessageBubble key={msg.id} message={msg} />
-        ))}
-
-        {isWaiting && (
-          <div className="mb-4 flex justify-start">
-            <div className="rounded-2xl bg-card px-4 py-3">
-              <span className="flex gap-1">
-                <span className="h-2 w-2 animate-bounce rounded-full bg-text-muted [animation-delay:0ms]" />
-                <span className="h-2 w-2 animate-bounce rounded-full bg-text-muted [animation-delay:150ms]" />
-                <span className="h-2 w-2 animate-bounce rounded-full bg-text-muted [animation-delay:300ms]" />
-              </span>
-            </div>
-          </div>
-        )}
-        {isPipelineRunning && !isWaiting && <AgentProgress agents={activeAgents} />}
-      </ScrollArea>
-
-      <InputBar
-        conversationId={conversationId}
-        onSend={(payload) => {
-          clearEvents()
-          setIsWaiting(true)
-          send(payload)
-          // Optimistically show the user message immediately — don't wait for DB round-trip
-          const text = (payload as { message: string }).message
-          if (text) {
-            mutateMessages(
-              (prev) => [
-                ...(prev ?? []),
-                {
-                  id: `optimistic-${Date.now()}`,
-                  conversation_id: conversationId,
-                  role: 'user' as const,
-                  content: text,
-                  created_at: new Date().toISOString(),
-                },
-              ],
-              { revalidate: false }
-            )
-          }
-        }}
-        onMessageSent={() => {}}
-      />
     </div>
   )
 }

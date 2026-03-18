@@ -49,12 +49,12 @@ export function InputBar({ conversationId, onSend, onMessageSent }: InputBarProp
   }
 
   return (
-    <div className="border-t border-border bg-background px-6 py-4">
+    <div className="border-t border-border bg-background px-4 py-3 md:px-6 md:py-4">
       <div className="flex items-end gap-3 rounded-xl border border-border bg-card px-4 py-3">
         <button
           onClick={() => fileRef.current?.click()}
           disabled={isUploading}
-          className="shrink-0 text-text-muted transition-colors hover:text-text-secondary disabled:opacity-50"
+          className="flex min-h-[44px] min-w-[44px] shrink-0 items-center justify-center text-text-muted transition-colors hover:text-text-secondary disabled:opacity-50"
           aria-label="Attach file"
         >
           <Paperclip className="h-5 w-5" />
@@ -77,7 +77,7 @@ export function InputBar({ conversationId, onSend, onMessageSent }: InputBarProp
         <button
           onClick={handleSend}
           disabled={!text.trim() || sending}
-          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-accent text-white transition-opacity disabled:opacity-40"
+          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-accent text-white transition-opacity disabled:opacity-40 md:h-8 md:w-8"
           aria-label="Send message"
         >
           <ArrowUp className="h-4 w-4" />

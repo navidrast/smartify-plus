@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Plus, Settings, FileText, Trash2 } from 'lucide-react'
+import { Plus, Settings, FileText, Trash2, X } from 'lucide-react'
 import { createConversation, deleteConversation } from '@/lib/api'
 import { Button } from '@/components/ui/Button'
 import { ScrollArea } from '@/components/ui/ScrollArea'
@@ -14,9 +14,10 @@ interface SidebarProps {
   activeConversationId: string | null
   conversations: Conversation[]
   onConversationsChange: () => void
+  onClose?: () => void
 }
 
-export function Sidebar({ activeConversationId, conversations, onConversationsChange }: SidebarProps) {
+export function Sidebar({ activeConversationId, conversations, onConversationsChange, onClose }: SidebarProps) {
   const router = useRouter()
   const [showSettings, setShowSettings] = useState(false)
 
@@ -24,6 +25,7 @@ export function Sidebar({ activeConversationId, conversations, onConversationsCh
     const conv = await createConversation()
     onConversationsChange()
     router.push(`/chat/${conv.id}`)
+    onClose?.()
   }
 
   const handleDelete = async (e: React.MouseEvent, convId: string) => {
@@ -50,12 +52,21 @@ export function Sidebar({ activeConversationId, conversations, onConversationsCh
       {showSettings && <SettingsModal onClose={() => setShowSettings(false)} />}
 
       <aside className="flex h-full w-[260px] shrink-0 flex-col border-r border-border bg-sidebar">
-        {/* Logo */}
+        {/* Logo + optional close button */}
         <div className="flex items-center gap-2 px-4 py-5">
           <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-accent text-sm font-bold text-white">
             S+
           </span>
-          <span className="text-base font-semibold text-text-primary">Smartify</span>
+          <span className="flex-1 text-base font-semibold text-text-primary">Smartify</span>
+          {onClose && (
+            <button
+              onClick={onClose}
+              className="text-text-muted hover:text-text-primary transition-colors p-1"
+              aria-label="Close menu"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          )}
         </div>
 
         {/* New Chat */}
@@ -73,7 +84,10 @@ export function Sidebar({ activeConversationId, conversations, onConversationsCh
             .map((conv) => (
               <button
                 key={conv.id}
-                onClick={() => router.push(`/chat/${conv.id}`)}
+                onClick={() => {
+                  router.push(`/chat/${conv.id}`)
+                  onClose?.()
+                }}
                 className={clsx(
                   'group flex w-full items-start gap-2 rounded-lg px-3 py-2.5 text-left transition-colors',
                   conv.id === activeConversationId
@@ -105,7 +119,7 @@ export function Sidebar({ activeConversationId, conversations, onConversationsCh
           <span className="flex-1 text-sm text-text-secondary">Demo User</span>
           <button
             onClick={() => setShowSettings(true)}
-            className="text-text-muted hover:text-text-secondary"
+            className="text-text-muted hover:text-text-secondary p-1"
             aria-label="Open settings"
           >
             <Settings className="h-4 w-4" />

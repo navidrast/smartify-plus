@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback } from 'react'
+import { useCallback, useState, useEffect } from 'react'
 import { Sidebar } from './Sidebar'
 import { ChatArea } from './ChatArea'
 import { Inspector } from './Inspector'
@@ -14,18 +14,99 @@ export function AppShell({ conversationId }: AppShellProps) {
   const { conversations, mutate: mutateConversations } = useConversations()
   const handleTitleUpdate = useCallback(() => mutateConversations(), [mutateConversations])
 
+  const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [inspectorOpen, setInspectorOpen] = useState(false)
+
+  // Close drawers on route change
+  useEffect(() => {
+    setSidebarOpen(false)
+    setInspectorOpen(false)
+  }, [conversationId])
+
+  // Lock body scroll when drawer open on mobile
+  useEffect(() => {
+    if (sidebarOpen || inspectorOpen) {
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = ''
+    }
+    return () => { document.body.style.overflow = '' }
+  }, [sidebarOpen, inspectorOpen])
+
+  // Close on ESC
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setSidebarOpen(false)
+        setInspectorOpen(false)
+      }
+    }
+    window.addEventListener('keydown', handler)
+    return () => window.removeEventListener('keydown', handler)
+  }, [])
+
   return (
-    <div className="flex h-screen w-screen">
-      <Sidebar
-        activeConversationId={conversationId}
-        conversations={conversations}
-        onConversationsChange={mutateConversations}
-      />
+    <div className="flex h-screen w-screen overflow-hidden">
+      {/* ── Desktop sidebar (hidden on mobile) ── */}
+      <div className="hidden md:flex">
+        <Sidebar
+          activeConversationId={conversationId}
+          conversations={conversations}
+          onConversationsChange={mutateConversations}
+        />
+      </div>
+
+      {/* ── Mobile sidebar drawer ── */}
+      {sidebarOpen && (
+        <div className="fixed inset-0 z-50 md:hidden">
+          {/* Backdrop */}
+          <div
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            onClick={() => setSidebarOpen(false)}
+          />
+          {/* Drawer */}
+          <div className="absolute left-0 top-0 h-full w-[280px] shadow-2xl">
+            <Sidebar
+              activeConversationId={conversationId}
+              conversations={conversations}
+              onConversationsChange={mutateConversations}
+              onClose={() => setSidebarOpen(false)}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* ── Chat (always visible, full width on mobile) ── */}
       <ChatArea
         conversationId={conversationId}
         onTitleUpdate={handleTitleUpdate}
+        onMenuOpen={() => setSidebarOpen(true)}
+        onInspectorOpen={() => setInspectorOpen(true)}
+        conversations={conversations}
       />
-      <Inspector conversationId={conversationId} />
+
+      {/* ── Desktop inspector (hidden on mobile) ── */}
+      <div className="hidden md:flex">
+        <Inspector conversationId={conversationId} />
+      </div>
+
+      {/* ── Mobile inspector drawer ── */}
+      {inspectorOpen && (
+        <div className="fixed inset-0 z-50 md:hidden">
+          {/* Backdrop */}
+          <div
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            onClick={() => setInspectorOpen(false)}
+          />
+          {/* Drawer from right */}
+          <div className="absolute right-0 top-0 h-full w-[min(320px,100vw)] shadow-2xl">
+            <Inspector
+              conversationId={conversationId}
+              onClose={() => setInspectorOpen(false)}
+            />
+          </div>
+        </div>
+      )}
     </div>
   )
 }
