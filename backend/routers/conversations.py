@@ -30,7 +30,7 @@ async def list_conversations(db: AsyncSession = Depends(get_db)):
 
 @router.post("/conversations", response_model=ConversationOut)
 async def create_conversation(
-    body: ConversationCreate,
+    body: ConversationCreate = ConversationCreate(),
     db: AsyncSession = Depends(get_db),
 ):
     conv = Conversation(

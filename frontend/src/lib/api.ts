@@ -21,7 +21,10 @@ export async function getConversation(id: string): Promise<Conversation> {
 }
 
 export async function createConversation(): Promise<Conversation> {
-  return fetchJSON<Conversation>('/api/conversations', { method: 'POST' })
+  return fetchJSON<Conversation>('/api/conversations', {
+    method: 'POST',
+    body: JSON.stringify({}),
+  })
 }
 
 export async function getMessages(conversationId: string): Promise<Message[]> {
