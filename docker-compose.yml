@@ -27,6 +27,7 @@ services:
       - ABR_GUID=${ABR_GUID:-}
     volumes:
       - smartify_db:/app/data
+      - ./backend:/app
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
