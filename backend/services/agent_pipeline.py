@@ -8,7 +8,7 @@ import uuid
 from typing import Callable
 
 from openai import AsyncOpenAI
-from sqlalchemy import select, update
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from agents.base import PipelineContext
@@ -29,10 +29,20 @@ _CHAT_SYSTEM = """You are Smartify, an AI assistant for Australian accounting fi
 You help with GST, ATO compliance, BAS preparation, invoice analysis, and accounting queries.
 Reply in plain conversational sentences — no bullet points, no bold text, no markdown, no emojis, no headers.
 Write as if texting a colleague: clear, direct, and professional.
-
-If asked what model or AI you are running on, say exactly:
-"I'm running on a customised model based on Qwen, hosted on a local isolated server. I also have access to the internet for research when needed."
 """
+
+# Hardcoded — never let the LLM answer this, it makes up cloud/SaaS answers
+_MODEL_IDENTITY_REPLY = (
+    "I'm running on a customised model based on Qwen 3.5, "
+    "hosted on a local isolated server. "
+    "I also have access to the internet for research when needed."
+)
+
+_MODEL_IDENTITY_KEYWORDS = (
+    "what model", "which model", "what ai", "what llm",
+    "who are you", "what are you running on", "are you cloud",
+    "are you local", "running on", "hosted on",
+)
 
 _TITLE_SYSTEM = """Generate a short conversation title (4-6 words max) from this first message.
 No quotes, no punctuation at the end, no generic titles like 'New Conversation' or 'Chat'.
@@ -58,16 +68,27 @@ async def _generate_title(
             max_tokens=20,
             timeout=10,
         )
-        title = (response.choices[0].message.content or "").strip().strip('"').strip("'")[:60]
-        if not title:
+        raw = response.choices[0].message.content or ""
+        title = raw.strip().strip('"').strip("'").strip()[:60]
+        logger.info("Title generation: API returned %r → cleaned %r", raw, title)
+
+        # Reject empty or default-sounding titles
+        if not title or title.lower() in ("new conversation", "chat", "conversation"):
+            logger.warning("Title generation returned unusable title %r — skipping", title)
             return
-        await db.execute(
-            update(Conversation)
-            .where(Conversation.id == conversation_id)
-            .values(title=title)
+
+        # Use ORM object update (more reliable than bulk UPDATE with async sessions)
+        result = await db.execute(
+            select(Conversation).where(Conversation.id == conversation_id)
         )
-        await db.commit()
-        await websocket_send({"type": "title_update", "title": title})
+        conv = result.scalar_one_or_none()
+        if conv:
+            conv.title = title
+            await db.commit()
+            logger.info("Title updated to %r for conversation %s", title, conversation_id)
+            await websocket_send({"type": "title_update", "title": title})
+        else:
+            logger.warning("Conversation %s not found for title update", conversation_id)
     except Exception as exc:
         logger.warning("Title generation failed: %s", exc)
 
@@ -83,6 +104,12 @@ async def _needs_title(conversation_id: str, db: AsyncSession) -> bool:
 
 async def _conversational_reply(user_message: str, websocket_send: Callable) -> str:
     """Handle plain text messages with no document — use qwen-plus for chat."""
+    # Intercept model identity questions — never trust the LLM to answer these correctly
+    msg_lower = user_message.lower()
+    if any(kw in msg_lower for kw in _MODEL_IDENTITY_KEYWORDS):
+        await websocket_send({"type": "message", "role": "assistant", "content": _MODEL_IDENTITY_REPLY})
+        return _MODEL_IDENTITY_REPLY
+
     client = AsyncOpenAI(base_url=QWEN_API_BASE, api_key=QWEN_API_KEY)
     response = await client.chat.completions.create(
         model=QWEN_TEXT_MODEL,

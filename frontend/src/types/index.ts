@@ -51,9 +51,13 @@ export interface AgentEvent {
     | 'agent_error'
     | 'pipeline_done'
     | 'message'
+    | 'title_update'
   agent?: AgentType
   message?: string
   data?: unknown
   error?: string
   summary?: unknown
+  title?: string
+  role?: string
+  content?: string
 }
