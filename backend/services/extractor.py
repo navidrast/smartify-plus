@@ -318,6 +318,8 @@ def _extract_from_spreadsheet(
 
     if file_ext.lower() == ".csv":
         df = pd.read_csv(file_path)
+    elif file_ext.lower() == ".xls":
+        df = pd.read_excel(file_path, engine="xlrd")
     else:
         df = pd.read_excel(file_path, engine="openpyxl")
 
@@ -400,7 +402,7 @@ def extract_from_file(
     all_records: list[dict[str, Any]] = []
 
     # Spreadsheet path — read structured data directly, no vision needed
-    if file_ext.lower() in (".xlsx", ".csv"):
+    if file_ext.lower() in (".xlsx", ".xls", ".csv"):
         return _extract_from_spreadsheet(file_path, file_ext, client, ollama_model)
 
     pages: list[tuple[str, str]] = []

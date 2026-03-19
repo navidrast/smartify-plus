@@ -202,7 +202,7 @@ export function ChatArea({ conversationId, onTitleUpdate, onMenuOpen, onInspecto
         ref={fileRef}
         type="file"
         className="hidden"
-        accept=".pdf,.png,.jpg,.jpeg,.tiff,.bmp,.webp,.xlsx,.csv"
+        accept=".pdf,.png,.jpg,.jpeg,.tiff,.bmp,.webp,.xlsx,.xls,.csv"
         onChange={handleFileChange}
       />
 
