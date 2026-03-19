@@ -91,6 +91,7 @@ export function AppShell({ conversationId }: AppShellProps) {
         onMenuOpen={() => setSidebarOpen(true)}
         onInspectorOpen={() => setInspectorOpen(true)}
         conversations={conversations}
+        onConversationsChange={mutateConversations}
       />
 
       {/* ── Desktop inspector (hidden on mobile) ── */}

@@ -35,7 +35,7 @@ interface SmartifyThreadProps {
   agents: Record<string, AgentEvent>
   isPipelineRunning: boolean
   isWaiting: boolean
-  onFileClick: () => void
+  onFileClick?: () => void
   isStagingFiles: boolean
   stagedFiles: StagedFile[]
   onRemoveStagedFile: (documentId: string) => void
@@ -149,7 +149,7 @@ const StagedFileChip: FC<{ name: string; onRemove: () => void }> = ({ name, onRe
 )
 
 const Composer: FC<{
-  onFileClick: () => void
+  onFileClick?: () => void
   isStagingFiles: boolean
   stagedFiles: StagedFile[]
   onRemoveStagedFile: (documentId: string) => void
@@ -190,14 +190,16 @@ const Composer: FC<{
         style={{ fontSize: '16px' }}
       />
       <div className="relative flex items-center justify-between">
-        <button
-          onClick={onFileClick}
-          type="button"
-          className="flex h-8 w-8 items-center justify-center rounded-lg text-text-muted transition-colors hover:bg-muted hover:text-text-secondary"
-          aria-label="Attach file"
-        >
-          <PaperclipIcon className="h-4 w-4" />
-        </button>
+        {onFileClick && (
+          <button
+            onClick={onFileClick}
+            type="button"
+            className="flex h-8 w-8 items-center justify-center rounded-lg text-text-muted transition-colors hover:bg-muted hover:text-text-secondary"
+            aria-label="Attach file"
+          >
+            <PaperclipIcon className="h-4 w-4" />
+          </button>
+        )}
 
         <ComposerPrimitive.Send asChild>
           <TooltipIconButton
