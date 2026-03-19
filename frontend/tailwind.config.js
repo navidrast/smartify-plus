@@ -5,6 +5,7 @@ module.exports = {
   theme: {
     extend: {
       colors: {
+        /* Smartify custom tokens */
         background: 'var(--color-bg)',
         card: 'var(--color-card)',
         'card-alt': 'var(--color-card-alt)',
@@ -29,10 +30,36 @@ module.exports = {
           reporting: '#4ade80',
           compliance: '#FF5C33',
         },
+        /* shadcn / assistant-ui semantic tokens */
+        foreground: 'var(--foreground)',
+        muted: {
+          DEFAULT: 'var(--muted)',
+          foreground: 'var(--muted-foreground)',
+        },
+        popover: {
+          DEFAULT: 'var(--popover)',
+          foreground: 'var(--popover-foreground)',
+        },
+        primary: {
+          DEFAULT: 'var(--primary)',
+          foreground: 'var(--primary-foreground)',
+        },
+        secondary: {
+          DEFAULT: 'var(--secondary)',
+          foreground: 'var(--secondary-foreground)',
+        },
+        destructive: 'var(--destructive)',
+        input: 'var(--input)',
+        ring: 'var(--ring)',
       },
       fontFamily: {
         mono: ['JetBrains Mono', 'ui-monospace', 'monospace'],
         sans: ['system-ui', '-apple-system', 'sans-serif'],
+      },
+      borderRadius: {
+        lg: 'var(--radius)',
+        md: 'calc(var(--radius) - 2px)',
+        sm: 'calc(var(--radius) - 4px)',
       },
     },
   },

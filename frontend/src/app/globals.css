@@ -5,8 +5,8 @@
 @tailwind utilities;
 
 @layer base {
-  /* Dark theme (default) */
   :root {
+    /* ── Smartify custom tokens ── */
     --color-bg: #111111;
     --color-card: #1A1A1A;
     --color-card-alt: #222222;
@@ -17,9 +17,28 @@
     --color-text-secondary: #B8B9B6;
     --color-text-muted: #666666;
     scrollbar-color: #2E2E2E #111111;
+
+    /* ── assistant-ui / shadcn semantic tokens (dark default) ── */
+    --foreground: #FFFFFF;
+    --muted: #222222;
+    --muted-foreground: #888888;
+    --popover: #1A1A1A;
+    --popover-foreground: #FFFFFF;
+    --primary: #FF8400;
+    --primary-foreground: #FFFFFF;
+    --secondary: #2a2a30;
+    --secondary-foreground: #FFFFFF;
+    --destructive: #FF5C33;
+    --input: #2E2E2E;
+    --ring: #FF8400;
+    --radius: 0.625rem;
+
+    /* ── assistant-ui thread layout ── */
+    --thread-max-width: 44rem;
+    --composer-radius: 24px;
+    --composer-padding: 10px;
   }
 
-  /* Light theme */
   .light {
     --color-bg: #F8F8F8;
     --color-card: #FFFFFF;
@@ -31,6 +50,19 @@
     --color-text-secondary: #52525B;
     --color-text-muted: #A1A1AA;
     scrollbar-color: #D4D4D8 #F4F4F5;
+
+    --foreground: #111111;
+    --muted: #F0F0F0;
+    --muted-foreground: #71717A;
+    --popover: #FFFFFF;
+    --popover-foreground: #111111;
+    --primary: #FF8400;
+    --primary-foreground: #FFFFFF;
+    --secondary: #E4E4E7;
+    --secondary-foreground: #111111;
+    --destructive: #FF5C33;
+    --input: #E2E2E2;
+    --ring: #FF8400;
   }
 
   html {
@@ -54,6 +86,7 @@
 
   * {
     scrollbar-width: thin;
+    border-color: var(--color-border);
   }
 
   *::-webkit-scrollbar { width: 6px; }
@@ -72,50 +105,41 @@
   }
 }
 
-/* ── assistant-ui animations (from assistant-ui/ui) ── */
+/* ── assistant-ui animations ── */
 @layer utilities {
   @keyframes aui-fade-in {
     from { opacity: 0; }
     to { opacity: 1; }
   }
-  @keyframes aui-slide-in-from-bottom-1 {
-    from { transform: translateY(4px); }
-    to { transform: translateY(0); }
+  @keyframes aui-slide-up-sm {
+    from { transform: translateY(4px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
   }
-  @keyframes aui-slide-in-from-bottom-2 {
-    from { transform: translateY(8px); }
-    to { transform: translateY(0); }
+  @keyframes aui-slide-up-md {
+    from { transform: translateY(8px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+  @keyframes aui-pulse-cursor {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
   }
 
-  .animate-in {
-    animation-duration: var(--tw-animate-duration, 150ms);
-    animation-fill-mode: both;
+  .aui-animate-in {
+    animation: aui-slide-up-sm 200ms ease-out both;
   }
-  .fade-in {
-    --tw-enter-opacity: 0;
-    animation-name: aui-fade-in;
-  }
-  .slide-in-from-bottom-1 {
-    animation-name: aui-slide-in-from-bottom-1, aui-fade-in;
-  }
-  .slide-in-from-bottom-2 {
-    animation-name: aui-slide-in-from-bottom-2, aui-fade-in;
-  }
-  .fill-mode-both {
-    animation-fill-mode: both;
-  }
-  .delay-75 {
+  .aui-animate-in-delayed {
+    animation: aui-slide-up-sm 200ms ease-out both;
     animation-delay: 75ms;
   }
-  .duration-200 {
-    animation-duration: 200ms;
+  .aui-animate-slide {
+    animation: aui-slide-up-md 250ms ease-out both;
   }
-  .duration-150 {
-    animation-duration: 150ms;
+  .aui-cursor {
+    animation: aui-pulse-cursor 1s step-end infinite;
   }
 }
 
-/* ── assistant-ui viewport ── */
+/* ── assistant-ui viewport and components ── */
 @layer components {
   [data-aui-viewport] {
     -webkit-overflow-scrolling: touch;
@@ -123,16 +147,26 @@
     scrollbar-width: thin;
   }
 
-  [data-aui-scroll-to-bottom] {
-    transition: opacity 200ms;
-  }
-
   [data-aui-composer-input] {
     field-sizing: content;
   }
 
-  /* assistant-ui action bar: show on message hover */
-  [data-role="assistant"]:hover [data-slot="action-bar"] {
+  /* Action bar: visible on message hover or last message */
+  [data-role="assistant"] .aui-action-bar {
+    opacity: 0;
+    transition: opacity 150ms;
+  }
+  [data-role="assistant"]:hover .aui-action-bar,
+  [data-role="assistant"]:last-child .aui-action-bar {
     opacity: 1;
+  }
+
+  /* Markdown streaming indicator */
+  .aui-md[data-status="running"]::after {
+    content: "\25CF";
+    display: inline-block;
+    margin-left: 0.25rem;
+    animation: aui-pulse-cursor 1s step-end infinite;
+    color: var(--primary);
   }
 }
