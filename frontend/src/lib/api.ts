@@ -46,7 +46,7 @@ export async function sendMessage(
 }
 
 export async function getRecords(conversationId: string): Promise<ExtractedRecord[]> {
-  return fetchJSON<ExtractedRecord[]>(`/api/conversations/${conversationId}/records`)
+  return fetchJSON<ExtractedRecord[]>(`/api/records?conversation_id=${conversationId}`)
 }
 
 export async function uploadFile(
@@ -82,5 +82,5 @@ export async function uploadFile(
 }
 
 export function getExportUrl(conversationId: string, format: 'excel' | 'pdf'): string {
-  return `/api/conversations/${conversationId}/export/${format}`
+  return `/api/export/${format}?conversation_id=${conversationId}`
 }
