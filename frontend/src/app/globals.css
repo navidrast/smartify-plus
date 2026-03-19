@@ -75,3 +75,23 @@
     padding-top: env(safe-area-inset-top);
   }
 }
+
+/* ── assistant-ui viewport and scrolling ── */
+@layer components {
+  /* ThreadPrimitive.Viewport uses [data-aui-viewport] internally */
+  [data-aui-viewport] {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+  }
+
+  /* Smooth scroll-to-bottom transitions */
+  [data-aui-scroll-to-bottom] {
+    transition: opacity 200ms;
+  }
+
+  /* ComposerPrimitive.Input auto-grow */
+  [data-aui-composer-input] {
+    field-sizing: content;
+  }
+}

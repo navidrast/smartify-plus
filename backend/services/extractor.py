@@ -305,6 +305,91 @@ Return ONLY valid JSON (first character must be {{):
     return response.choices[0].message.content or ""
 
 
+def _extract_from_spreadsheet(
+    file_path: str,
+    file_ext: str,
+    client: OpenAI,
+    model: str,
+) -> list[dict[str, Any]]:
+    """Extract records from xlsx/csv by reading rows and sending to LLM for field mapping."""
+    import pandas as pd
+
+    logger.info("Reading spreadsheet %s...", file_ext)
+
+    if file_ext.lower() == ".csv":
+        df = pd.read_csv(file_path)
+    else:
+        df = pd.read_excel(file_path, engine="openpyxl")
+
+    if df.empty:
+        return [{
+            "date": None, "amount": None, "vendor": None,
+            "description": "Empty spreadsheet — no data rows found",
+            "gst_code": "unknown", "confidence": 0.0,
+            "notes": "Spreadsheet was empty",
+        }]
+
+    logger.info("Spreadsheet has %d rows, %d columns: %s", len(df), len(df.columns), list(df.columns))
+
+    all_records: list[dict[str, Any]] = []
+    # Process in chunks of 50 rows to stay within LLM context limits
+    chunk_size = 50
+    for chunk_start in range(0, len(df), chunk_size):
+        chunk = df.iloc[chunk_start:chunk_start + chunk_size]
+        chunk_csv = chunk.to_csv(index=False)
+        label = f"rows {chunk_start + 1}-{chunk_start + len(chunk)}"
+
+        prompt = f"""Extract structured financial records from this spreadsheet data.
+Each row likely represents a transaction. Map the columns to the required fields.
+
+SPREADSHEET DATA (CSV format):
+{chunk_csv}
+
+Return a JSON array of objects. Each object must have:
+{{
+  "date": "DD/MM/YYYY or null",
+  "amount": float total amount or null,
+  "vendor": "business name or null",
+  "description": "goods/services description or null",
+  "gst_code": "10%" | "0%" | "unknown",
+  "confidence": 0.0 to 1.0,
+  "notes": "any relevant notes"
+}}
+
+Rules:
+- Map date columns to DD/MM/YYYY format
+- Use the total/amount/debit/credit column for amount
+- gst_code: use "10%" if GST is included/mentioned, "0%" if GST-free, "unknown" if not determinable
+- Set confidence based on how clearly the data maps (0.90+ for clean structured data)
+- Return ONLY the JSON array — no explanation, no markdown"""
+
+        try:
+            response = client.chat.completions.create(
+                model=model,
+                messages=[{"role": "user", "content": prompt}],
+                temperature=0.05,
+                max_tokens=4096,
+                timeout=120,
+            )
+            raw = response.choices[0].message.content or ""
+            records = _parse_model_response(raw)
+            for r in records:
+                r["_source"] = label
+            all_records.extend(records)
+            logger.info("  %s -> %d record(s) from spreadsheet", label, len(records))
+        except Exception as exc:
+            logger.error("LLM extraction failed for %s: %s", label, exc)
+            all_records.append({
+                "date": None, "amount": None, "vendor": None,
+                "description": f"Extraction failed — {label}",
+                "gst_code": "unknown", "confidence": 0.0,
+                "notes": f"LLM error: {str(exc)[:200]}",
+                "_source": label,
+            })
+
+    return all_records
+
+
 def extract_from_file(
     file_path: str,
     file_ext: str,
@@ -313,6 +398,11 @@ def extract_from_file(
 ) -> list[dict[str, Any]]:
     client = OpenAI(base_url=ollama_base_url, api_key=os.getenv("OLLAMA_API_KEY", "ollama"))
     all_records: list[dict[str, Any]] = []
+
+    # Spreadsheet path — read structured data directly, no vision needed
+    if file_ext.lower() in (".xlsx", ".csv"):
+        return _extract_from_spreadsheet(file_path, file_ext, client, ollama_model)
+
     pages: list[tuple[str, str]] = []
 
     if file_ext.lower() == ".pdf":

@@ -13,7 +13,7 @@ from schemas.document import UploadResponse
 
 router = APIRouter(prefix="/api", tags=["upload"])
 
-ALLOWED_EXTENSIONS = {".pdf", ".png", ".jpg", ".jpeg", ".tiff", ".bmp", ".webp"}
+ALLOWED_EXTENSIONS = {".pdf", ".png", ".jpg", ".jpeg", ".tiff", ".bmp", ".webp", ".xlsx", ".csv"}
 MAX_FILE_SIZE = 50 * 1024 * 1024  # 50 MB
 
 

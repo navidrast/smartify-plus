@@ -46,7 +46,7 @@ export function UploadZone({ conversationId, onDone }: UploadZoneProps) {
           Drop your file here
         </p>
       )}
-      <p className="mt-2 text-sm text-text-muted">PDF, PNG, JPG, TIFF, BMP, WebP</p>
+      <p className="mt-2 text-sm text-text-muted">PDF, PNG, JPG, TIFF, BMP, WebP, XLSX, CSV</p>
     </div>
   )
 }
