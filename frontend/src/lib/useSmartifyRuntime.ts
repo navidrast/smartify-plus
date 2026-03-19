@@ -62,9 +62,12 @@ export function useSmartifyRuntime({
       role: msg.role === 'user' ? ('user' as const) : ('assistant' as const),
       content: [{ type: 'text' as const, text: msg.content }],
       createdAt: new Date(msg.created_at),
-      status: msg.id === '__streaming__'
-        ? { type: 'running' as const }
-        : { type: 'complete' as const, reason: 'stop' as const },
+      // status is only valid for assistant messages — user messages must omit it
+      ...(msg.role !== 'user' && {
+        status: msg.id === '__streaming__'
+          ? { type: 'running' as const }
+          : { type: 'complete' as const, reason: 'stop' as const },
+      }),
       metadata: {
         custom: {
           originalRole: msg.role,
