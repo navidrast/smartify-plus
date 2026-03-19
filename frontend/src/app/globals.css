@@ -37,19 +37,17 @@
     font-family: 'JetBrains Mono', ui-monospace, monospace;
     background-color: var(--color-bg);
     color: var(--color-text-primary);
-    /* Prevent iOS bounce scroll at root */
     overscroll-behavior: none;
   }
 
   body {
     @apply bg-background text-text-primary;
     overflow: hidden;
-    /* Remove tap highlight on mobile */
     -webkit-tap-highlight-color: transparent;
   }
 
-  /* Touch momentum scrolling for all scroll containers */
-  .overflow-y-auto {
+  .overflow-y-auto,
+  .overflow-y-scroll {
     -webkit-overflow-scrolling: touch;
     overscroll-behavior: contain;
   }
@@ -62,12 +60,10 @@
   *::-webkit-scrollbar-track { background: var(--color-bg); }
   *::-webkit-scrollbar-thumb { background: var(--color-border); border-radius: 3px; }
 
-  /* On touch devices (no hover), always show delete buttons */
   @media (hover: none) {
     .touch-show { opacity: 1 !important; }
   }
 
-  /* Safe area padding utilities */
   .pb-safe {
     padding-bottom: max(12px, env(safe-area-inset-bottom));
   }
@@ -76,22 +72,67 @@
   }
 }
 
-/* ── assistant-ui viewport and scrolling ── */
+/* ── assistant-ui animations (from assistant-ui/ui) ── */
+@layer utilities {
+  @keyframes aui-fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  @keyframes aui-slide-in-from-bottom-1 {
+    from { transform: translateY(4px); }
+    to { transform: translateY(0); }
+  }
+  @keyframes aui-slide-in-from-bottom-2 {
+    from { transform: translateY(8px); }
+    to { transform: translateY(0); }
+  }
+
+  .animate-in {
+    animation-duration: var(--tw-animate-duration, 150ms);
+    animation-fill-mode: both;
+  }
+  .fade-in {
+    --tw-enter-opacity: 0;
+    animation-name: aui-fade-in;
+  }
+  .slide-in-from-bottom-1 {
+    animation-name: aui-slide-in-from-bottom-1, aui-fade-in;
+  }
+  .slide-in-from-bottom-2 {
+    animation-name: aui-slide-in-from-bottom-2, aui-fade-in;
+  }
+  .fill-mode-both {
+    animation-fill-mode: both;
+  }
+  .delay-75 {
+    animation-delay: 75ms;
+  }
+  .duration-200 {
+    animation-duration: 200ms;
+  }
+  .duration-150 {
+    animation-duration: 150ms;
+  }
+}
+
+/* ── assistant-ui viewport ── */
 @layer components {
-  /* ThreadPrimitive.Viewport uses [data-aui-viewport] internally */
   [data-aui-viewport] {
     -webkit-overflow-scrolling: touch;
     overscroll-behavior: contain;
     scrollbar-width: thin;
   }
 
-  /* Smooth scroll-to-bottom transitions */
   [data-aui-scroll-to-bottom] {
     transition: opacity 200ms;
   }
 
-  /* ComposerPrimitive.Input auto-grow */
   [data-aui-composer-input] {
     field-sizing: content;
+  }
+
+  /* assistant-ui action bar: show on message hover */
+  [data-role="assistant"]:hover [data-slot="action-bar"] {
+    opacity: 1;
   }
 }
