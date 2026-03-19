@@ -20,11 +20,16 @@ interface ChatAreaProps {
   conversations?: Conversation[]
 }
 
+export type StagedFile = { name: string; documentId: string }
+
 export function ChatArea({ conversationId, onTitleUpdate, onMenuOpen, onInspectorOpen, conversations = [] }: ChatAreaProps) {
   const [showDrop, setShowDrop] = useState(false)
   const [isWaiting, setIsWaiting] = useState(false)
   const [streamingText, setStreamingText] = useState('')
+  const [stagedFiles, setStagedFiles] = useState<StagedFile[]>([])
+  const [isStagingFiles, setIsStagingFiles] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
+  const dragCounterRef = useRef(0)
 
   const { data: messages, mutate: mutateMessages } = useSWR<Message[]>(
     conversationId ? `/api/conversations/${conversationId}/messages` : null,
@@ -32,13 +37,11 @@ export function ChatArea({ conversationId, onTitleUpdate, onMenuOpen, onInspecto
   )
 
   const { events, send, clearEvents } = useWebSocket(conversationId)
-  const { upload, isUploading } = useUpload(conversationId)
+  const { upload } = useUpload(conversationId)
 
   // Track active agents from events
   const activeAgents = events.reduce<Record<string, AgentEvent>>((acc, ev) => {
-    if (ev.agent) {
-      acc[ev.agent] = ev
-    }
+    if (ev.agent) acc[ev.agent] = ev
     return acc
   }, {})
 
@@ -74,11 +77,33 @@ export function ChatArea({ conversationId, onTitleUpdate, onMenuOpen, onInspecto
     }
   }, [events, onTitleUpdate])
 
+  // Upload files and stage them (no auto-send)
+  const handleDroppedFiles = useCallback(async (files: File[]) => {
+    if (!conversationId) return
+    setIsStagingFiles(true)
+    try {
+      const results = await Promise.all(files.map((f) => upload(f)))
+      const newStaged = results.flatMap((r, i) =>
+        r?.document_id ? [{ name: files[i].name, documentId: r.document_id }] : []
+      )
+      setStagedFiles((prev) => [...prev, ...newStaged])
+    } finally {
+      setIsStagingFiles(false)
+    }
+  }, [conversationId, upload])
+
+  const handleRemoveStagedFile = useCallback((documentId: string) => {
+    setStagedFiles((prev) => prev.filter((f) => f.documentId !== documentId))
+  }, [])
+
   const handleSend = useCallback((payload: { message: string; document_ids: string[] }) => {
     clearEvents()
     setIsWaiting(true)
     setStreamingText('')
-    send(payload)
+    // Merge any staged file IDs into the payload
+    const allDocIds = [...payload.document_ids, ...stagedFiles.map((f) => f.documentId)]
+    send({ ...payload, document_ids: allDocIds })
+    setStagedFiles([])
     // Optimistically show the user message immediately
     if (payload.message) {
       mutateMessages(
@@ -95,7 +120,7 @@ export function ChatArea({ conversationId, onTitleUpdate, onMenuOpen, onInspecto
         { revalidate: false }
       )
     }
-  }, [clearEvents, send, mutateMessages, conversationId])
+  }, [clearEvents, send, mutateMessages, conversationId, stagedFiles])
 
   const runtime = useSmartifyRuntime({
     messages,
@@ -104,20 +129,27 @@ export function ChatArea({ conversationId, onTitleUpdate, onMenuOpen, onInspecto
     streamingText: isPipelineRunning ? streamingText : undefined,
   })
 
-  const handleDragOver = useCallback((e: React.DragEvent) => {
+  // Drag counter prevents premature overlay dismiss when passing over child elements
+  const handleDragEnter = useCallback((e: React.DragEvent) => {
     e.preventDefault()
+    dragCounterRef.current++
     setShowDrop(true)
   }, [])
 
-  const handleDragLeave = useCallback(() => setShowDrop(false), [])
+  const handleDragLeave = useCallback((e: React.DragEvent) => {
+    e.preventDefault()
+    dragCounterRef.current--
+    if (dragCounterRef.current === 0) setShowDrop(false)
+  }, [])
+
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault()
+  }, [])
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file || !conversationId) return
-    const result = await upload(file)
-    if (result?.document_id) {
-      handleSend({ message: `Analyse this document: ${file.name}`, document_ids: [result.document_id] })
-    }
+    const files = Array.from(e.target.files ?? [])
+    if (!files.length || !conversationId) return
+    await handleDroppedFiles(files)
     if (fileRef.current) fileRef.current.value = ''
   }
 
@@ -165,8 +197,9 @@ export function ChatArea({ conversationId, onTitleUpdate, onMenuOpen, onInspecto
   return (
     <div
       className="relative flex flex-1 flex-col bg-background min-w-0"
-      onDragOver={handleDragOver}
+      onDragEnter={handleDragEnter}
       onDragLeave={handleDragLeave}
+      onDragOver={handleDragOver}
     >
       {/* Mobile top bar */}
       <div className="flex items-center gap-2 border-b border-border bg-sidebar px-2 py-2 md:hidden">
@@ -189,18 +222,23 @@ export function ChatArea({ conversationId, onTitleUpdate, onMenuOpen, onInspecto
 
       {showDrop && (
         <UploadZone
-          conversationId={conversationId}
-          onDone={() => {
+          onFiles={(files) => {
+            dragCounterRef.current = 0
             setShowDrop(false)
-            mutateMessages()
+            handleDroppedFiles(files)
+          }}
+          onDismiss={() => {
+            dragCounterRef.current = 0
+            setShowDrop(false)
           }}
         />
       )}
 
-      {/* Hidden file input for the attach button */}
+      {/* Hidden file input — multiple files supported */}
       <input
         ref={fileRef}
         type="file"
+        multiple
         className="hidden"
         accept=".pdf,.png,.jpg,.jpeg,.tiff,.bmp,.webp,.xlsx,.xls,.csv"
         onChange={handleFileChange}
@@ -212,7 +250,9 @@ export function ChatArea({ conversationId, onTitleUpdate, onMenuOpen, onInspecto
           isPipelineRunning={isPipelineRunning}
           isWaiting={isWaiting}
           onFileClick={() => fileRef.current?.click()}
-          isUploading={isUploading}
+          isStagingFiles={isStagingFiles}
+          stagedFiles={stagedFiles}
+          onRemoveStagedFile={handleRemoveStagedFile}
         />
       </AssistantRuntimeProvider>
     </div>

@@ -16,7 +16,7 @@ import {
   PaperclipIcon,
   CopyIcon,
   CheckIcon,
-  RefreshCwIcon,
+  XIcon,
   UploadIcon,
   FileSpreadsheetIcon,
   MessageSquareIcon,
@@ -26,6 +26,7 @@ import { cn } from '@/lib/cn'
 import { AgentCard } from '@/components/chat/AgentCard'
 import { AgentProgress } from '@/components/chat/AgentProgress'
 import type { AgentEvent, AgentType } from '@/types'
+import type { StagedFile } from '@/components/layout/ChatArea'
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // THREAD (main container — mirrors assistant-ui thread.tsx)
@@ -35,7 +36,9 @@ interface SmartifyThreadProps {
   isPipelineRunning: boolean
   isWaiting: boolean
   onFileClick: () => void
-  isUploading: boolean
+  isStagingFiles: boolean
+  stagedFiles: StagedFile[]
+  onRemoveStagedFile: (documentId: string) => void
 }
 
 export const SmartifyThread: FC<SmartifyThreadProps> = ({
@@ -43,7 +46,9 @@ export const SmartifyThread: FC<SmartifyThreadProps> = ({
   isPipelineRunning,
   isWaiting,
   onFileClick,
-  isUploading,
+  isStagingFiles,
+  stagedFiles,
+  onRemoveStagedFile,
 }) => (
   <ThreadPrimitive.Root
     data-slot="thread"
@@ -80,7 +85,12 @@ export const SmartifyThread: FC<SmartifyThreadProps> = ({
         style={{ maxWidth: 'var(--thread-max-width)' }}
       >
         <ThreadScrollToBottom />
-        <Composer onFileClick={onFileClick} isUploading={isUploading} />
+        <Composer
+          onFileClick={onFileClick}
+          isStagingFiles={isStagingFiles}
+          stagedFiles={stagedFiles}
+          onRemoveStagedFile={onRemoveStagedFile}
+        />
       </ThreadPrimitive.ViewportFooter>
     </ThreadPrimitive.Viewport>
   </ThreadPrimitive.Root>
@@ -123,7 +133,27 @@ const SuggestionButton: FC<{ icon: React.ReactNode; text: string }> = ({ icon, t
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // COMPOSER (input bar — mirrors assistant-ui composer)
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-const Composer: FC<{ onFileClick: () => void; isUploading: boolean }> = ({ onFileClick, isUploading }) => (
+const StagedFileChip: FC<{ name: string; onRemove: () => void }> = ({ name, onRemove }) => (
+  <div className="flex items-center gap-1 rounded-lg border border-border bg-muted px-2 py-1 text-xs text-text-secondary">
+    <PaperclipIcon className="h-3 w-3 shrink-0 text-text-muted" />
+    <span className="max-w-[140px] truncate">{name}</span>
+    <button
+      onClick={onRemove}
+      type="button"
+      className="ml-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded text-text-muted hover:text-text-primary"
+      aria-label={`Remove ${name}`}
+    >
+      <XIcon className="h-3 w-3" />
+    </button>
+  </div>
+)
+
+const Composer: FC<{
+  onFileClick: () => void
+  isStagingFiles: boolean
+  stagedFiles: StagedFile[]
+  onRemoveStagedFile: (documentId: string) => void
+}> = ({ onFileClick, isStagingFiles, stagedFiles, onRemoveStagedFile }) => (
   <ComposerPrimitive.Root
     data-slot="composer"
     className="relative flex w-full flex-col"
@@ -132,9 +162,28 @@ const Composer: FC<{ onFileClick: () => void; isUploading: boolean }> = ({ onFil
       data-slot="composer-shell"
       className="flex w-full flex-col gap-2 rounded-[var(--composer-radius)] border border-border bg-background p-[var(--composer-padding)] transition-shadow focus-within:border-ring/50 focus-within:ring-2 focus-within:ring-ring/20"
     >
+      {/* Staged file chips */}
+      {(stagedFiles.length > 0 || isStagingFiles) && (
+        <div className="flex flex-wrap gap-1.5 px-2 pt-1">
+          {stagedFiles.map((f) => (
+            <StagedFileChip
+              key={f.documentId}
+              name={f.name}
+              onRemove={() => onRemoveStagedFile(f.documentId)}
+            />
+          ))}
+          {isStagingFiles && (
+            <div className="flex items-center gap-1.5 rounded-lg border border-border bg-muted px-2 py-1 text-xs text-muted-foreground">
+              <span className="h-2 w-2 animate-pulse rounded-full bg-accent" />
+              Uploading...
+            </div>
+          )}
+        </div>
+      )}
+
       <ComposerPrimitive.Input
         data-slot="composer-input"
-        placeholder="Send a message..."
+        placeholder={stagedFiles.length > 0 ? 'Add a message or just send the files…' : 'Send a message…'}
         className="max-h-32 min-h-10 w-full resize-none bg-transparent px-2 py-1 text-sm text-text-primary outline-none placeholder:text-muted-foreground"
         rows={1}
         autoFocus
@@ -143,9 +192,8 @@ const Composer: FC<{ onFileClick: () => void; isUploading: boolean }> = ({ onFil
       <div className="relative flex items-center justify-between">
         <button
           onClick={onFileClick}
-          disabled={isUploading}
           type="button"
-          className="flex h-8 w-8 items-center justify-center rounded-lg text-text-muted transition-colors hover:bg-muted hover:text-text-secondary disabled:opacity-40"
+          className="flex h-8 w-8 items-center justify-center rounded-lg text-text-muted transition-colors hover:bg-muted hover:text-text-secondary"
           aria-label="Attach file"
         >
           <PaperclipIcon className="h-4 w-4" />
