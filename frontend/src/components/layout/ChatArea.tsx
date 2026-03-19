@@ -13,6 +13,11 @@ import { SmartifyThread } from '@/components/assistant-ui/SmartifyThread'
 import { UploadZone } from '@/components/chat/UploadZone'
 import type { Message, AgentEvent, Conversation } from '@/types'
 
+// Module-level storage for files dropped before a conversation exists.
+// File objects can't be serialized to sessionStorage, so we keep them here
+// across the SPA navigation that auto-creates a new conversation.
+let pendingDropFiles: File[] = []
+
 interface ChatAreaProps {
   conversationId: string | null
   onTitleUpdate?: () => void
@@ -41,7 +46,6 @@ export function ChatArea({
   const [stagedFiles, setStagedFiles] = useState<StagedFile[]>([])
   const [isStagingFiles, setIsStagingFiles] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
-  const dragCounterRef = useRef(0)
 
   const { data: messages, mutate: mutateMessages } = useSWR<Message[]>(
     conversationId ? `/api/conversations/${conversationId}/messages` : null,
@@ -117,7 +121,6 @@ export function ChatArea({
   // Upload files and stage them (no auto-send)
   const handleDroppedFiles = useCallback(
     async (files: File[]) => {
-      if (!conversationId) return
       setIsStagingFiles(true)
       try {
         const results = await Promise.all(files.map((f) => upload(f)))
@@ -129,8 +132,57 @@ export function ChatArea({
         setIsStagingFiles(false)
       }
     },
-    [conversationId, upload]
+    [upload]
   )
+
+  // When a conversation becomes available, upload any files that were dropped
+  // before the conversation existed (module-level pendingDropFiles).
+  useEffect(() => {
+    if (!conversationId || pendingDropFiles.length === 0) return
+    const files = pendingDropFiles
+    pendingDropFiles = []
+    handleDroppedFiles(files)
+  }, [conversationId, handleDroppedFiles])
+
+  // Window-level drag detection — works anywhere on screen, including welcome state.
+  useEffect(() => {
+    let counter = 0
+
+    const onDragEnter = (e: DragEvent) => {
+      if (!e.dataTransfer?.types.includes('Files')) return
+      e.preventDefault()
+      counter++
+      setShowDrop(true)
+    }
+
+    const onDragLeave = (e: DragEvent) => {
+      if (!e.dataTransfer?.types.includes('Files')) return
+      counter = Math.max(0, counter - 1)
+      if (counter === 0) setShowDrop(false)
+    }
+
+    const onDragOver = (e: DragEvent) => {
+      if (e.dataTransfer?.types.includes('Files')) e.preventDefault()
+    }
+
+    // Safety net: reset counter if drop lands outside the UploadZone overlay
+    const onDrop = (e: DragEvent) => {
+      counter = 0
+      setShowDrop(false)
+    }
+
+    window.addEventListener('dragenter', onDragEnter)
+    window.addEventListener('dragleave', onDragLeave)
+    window.addEventListener('dragover', onDragOver)
+    window.addEventListener('drop', onDrop)
+
+    return () => {
+      window.removeEventListener('dragenter', onDragEnter)
+      window.removeEventListener('dragleave', onDragLeave)
+      window.removeEventListener('dragover', onDragOver)
+      window.removeEventListener('drop', onDrop)
+    }
+  }, [])
 
   const handleRemoveStagedFile = useCallback((documentId: string) => {
     setStagedFiles((prev) => prev.filter((f) => f.documentId !== documentId))
@@ -182,31 +234,18 @@ export function ChatArea({
     streamingText: isPipelineRunning ? streamingText : undefined,
   })
 
-  // Drag-drop only active when there is a real conversation to upload into
-  const handleDragEnter = useCallback(
-    (e: React.DragEvent) => {
-      if (!conversationId) return
-      e.preventDefault()
-      dragCounterRef.current++
-      setShowDrop(true)
-    },
-    [conversationId]
-  )
-
-  const handleDragLeave = useCallback((e: React.DragEvent) => {
-    e.preventDefault()
-    dragCounterRef.current--
-    if (dragCounterRef.current === 0) setShowDrop(false)
-  }, [])
-
-  const handleDragOver = useCallback((e: React.DragEvent) => {
-    e.preventDefault()
-  }, [])
-
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files ?? [])
-    if (!files.length || !conversationId) return
-    await handleDroppedFiles(files)
+    if (!files.length) return
+    if (!conversationId) {
+      pendingDropFiles = files
+      createConversation().then((conv) => {
+        onConversationsChange?.()
+        router.push(`/chat/${conv.id}`)
+      })
+    } else {
+      await handleDroppedFiles(files)
+    }
     if (fileRef.current) fileRef.current.value = ''
   }
 
@@ -215,12 +254,7 @@ export function ChatArea({
     : 'Smartify'
 
   return (
-    <div
-      className="relative flex flex-1 flex-col bg-background min-w-0"
-      onDragEnter={handleDragEnter}
-      onDragLeave={handleDragLeave}
-      onDragOver={handleDragOver}
-    >
+    <div className="relative flex flex-1 flex-col bg-background min-w-0">
       {/* Mobile top bar */}
       <div className="flex items-center gap-2 border-b border-border bg-sidebar px-2 py-2 md:hidden">
         <button
@@ -243,14 +277,19 @@ export function ChatArea({
       {showDrop && (
         <UploadZone
           onFiles={(files) => {
-            dragCounterRef.current = 0
             setShowDrop(false)
-            handleDroppedFiles(files)
+            if (!conversationId) {
+              // No conversation yet — store files and auto-create one
+              pendingDropFiles = files
+              createConversation().then((conv) => {
+                onConversationsChange?.()
+                router.push(`/chat/${conv.id}`)
+              })
+            } else {
+              handleDroppedFiles(files)
+            }
           }}
-          onDismiss={() => {
-            dragCounterRef.current = 0
-            setShowDrop(false)
-          }}
+          onDismiss={() => setShowDrop(false)}
         />
       )}
 
@@ -269,7 +308,7 @@ export function ChatArea({
           agents={activeAgents}
           isPipelineRunning={isPipelineRunning}
           isWaiting={isWaiting}
-          onFileClick={conversationId ? () => fileRef.current?.click() : undefined}
+          onFileClick={() => fileRef.current?.click()}
           isStagingFiles={isStagingFiles}
           stagedFiles={stagedFiles}
           onRemoveStagedFile={handleRemoveStagedFile}

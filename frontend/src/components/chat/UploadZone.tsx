@@ -22,7 +22,7 @@ export function UploadZone({ onFiles, onDismiss }: UploadZoneProps) {
 
   return (
     <div
-      className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-background/90 backdrop-blur-sm"
+      className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-background/90 backdrop-blur-sm"
       onDrop={handleDrop}
       onDragOver={(e) => e.preventDefault()}
     >
