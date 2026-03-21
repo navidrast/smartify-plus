@@ -6,21 +6,21 @@ const manrope = Manrope({
   subsets: ['latin'],
   weight: ['400', '600', '700', '800'],
   variable: '--font-manrope',
-  display: 'swap',
+  display: 'block',
 })
 
 const inter = Inter({
   subsets: ['latin'],
   weight: ['400', '500', '600'],
   variable: '--font-inter',
-  display: 'swap',
+  display: 'block',
 })
 
 const jetbrainsMono = JetBrains_Mono({
   subsets: ['latin'],
   weight: ['400', '500', '600', '700'],
   variable: '--font-mono',
-  display: 'swap',
+  display: 'block',
 })
 
 export const metadata: Metadata = {
