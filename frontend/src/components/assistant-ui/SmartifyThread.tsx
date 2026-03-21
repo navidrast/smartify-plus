@@ -25,6 +25,7 @@ import {
 import { cn } from '@/lib/cn'
 import { AgentCard } from '@/components/chat/AgentCard'
 import { AgentProgress } from '@/components/chat/AgentProgress'
+import { ModePicker, useChatModes } from '@/components/chat/ModePicker'
 import type { AgentEvent, AgentType } from '@/types'
 import type { StagedFile } from '@/components/layout/ChatArea'
 
@@ -49,52 +50,57 @@ export const SmartifyThread: FC<SmartifyThreadProps> = ({
   isStagingFiles,
   stagedFiles,
   onRemoveStagedFile,
-}) => (
-  <ThreadPrimitive.Root
-    data-slot="thread"
-    className="aui-root flex h-full flex-1 flex-col bg-background"
-    style={{
-      ['--thread-max-width' as string]: '44rem',
-      ['--composer-radius' as string]: '24px',
-      ['--composer-padding' as string]: '10px',
-    }}
-  >
-    <ThreadPrimitive.Viewport
-      className="relative flex flex-1 flex-col overflow-x-hidden overflow-y-scroll scroll-smooth px-4 pt-4"
+}) => {
+  const { modes, toggle } = useChatModes()
+  return (
+    <ThreadPrimitive.Root
+      data-slot="thread"
+      className="aui-root flex h-full flex-1 flex-col bg-background"
+      style={{
+        ['--thread-max-width' as string]: '44rem',
+        ['--composer-radius' as string]: '24px',
+        ['--composer-padding' as string]: '10px',
+      }}
     >
-      <ThreadPrimitive.Empty>
-        <ThreadWelcome />
-      </ThreadPrimitive.Empty>
-
-      <ThreadPrimitive.Messages
-        components={{
-          UserMessage,
-          AssistantMessage,
-          Message: AssistantMessage,
-        }}
-      />
-
-      <PipelineStatus
-        agents={agents}
-        isPipelineRunning={isPipelineRunning}
-        isWaiting={isWaiting}
-      />
-
-      <ThreadPrimitive.ViewportFooter
-        className="sticky bottom-0 mx-auto mt-auto flex w-full flex-col gap-4 overflow-visible bg-background pb-4 md:pb-6"
-        style={{ maxWidth: 'var(--thread-max-width)' }}
+      <ThreadPrimitive.Viewport
+        className="relative flex flex-1 flex-col overflow-x-hidden overflow-y-scroll scroll-smooth px-4 pt-4"
       >
-        <ThreadScrollToBottom />
-        <Composer
-          onFileClick={onFileClick}
-          isStagingFiles={isStagingFiles}
-          stagedFiles={stagedFiles}
-          onRemoveStagedFile={onRemoveStagedFile}
+        <ThreadPrimitive.Empty>
+          <ThreadWelcome />
+        </ThreadPrimitive.Empty>
+
+        <ThreadPrimitive.Messages
+          components={{
+            UserMessage,
+            AssistantMessage,
+            Message: AssistantMessage,
+          }}
         />
-      </ThreadPrimitive.ViewportFooter>
-    </ThreadPrimitive.Viewport>
-  </ThreadPrimitive.Root>
-)
+
+        <PipelineStatus
+          agents={agents}
+          isPipelineRunning={isPipelineRunning}
+          isWaiting={isWaiting}
+        />
+
+        <ThreadPrimitive.ViewportFooter
+          className="sticky bottom-0 mx-auto mt-auto flex w-full flex-col gap-4 overflow-visible bg-background pb-4 md:pb-6"
+          style={{ maxWidth: 'var(--thread-max-width)' }}
+        >
+          <ThreadScrollToBottom />
+          <Composer
+            onFileClick={onFileClick}
+            isStagingFiles={isStagingFiles}
+            stagedFiles={stagedFiles}
+            onRemoveStagedFile={onRemoveStagedFile}
+            modes={modes}
+            onModeToggle={toggle}
+          />
+        </ThreadPrimitive.ViewportFooter>
+      </ThreadPrimitive.Viewport>
+    </ThreadPrimitive.Root>
+  )
+}
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // WELCOME (empty thread state)
@@ -106,10 +112,10 @@ const ThreadWelcome: FC = () => (
         <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-accent text-xl font-bold text-white shadow-lg shadow-accent/25">
           S+
         </div>
-        <h1 className="aui-animate-in text-2xl font-semibold text-text-primary">
+        <h1 className="aui-animate-in font-headline text-2xl font-bold text-on-surface">
           Hello there!
         </h1>
-        <p className="aui-animate-in-delayed text-xl text-text-muted">
+        <p className="aui-animate-in-delayed text-base text-on-surface-variant">
           How can I help you today?
         </p>
       </div>
@@ -153,7 +159,9 @@ const Composer: FC<{
   isStagingFiles: boolean
   stagedFiles: StagedFile[]
   onRemoveStagedFile: (documentId: string) => void
-}> = ({ onFileClick, isStagingFiles, stagedFiles, onRemoveStagedFile }) => (
+  modes: ReturnType<typeof useChatModes>['modes']
+  onModeToggle: ReturnType<typeof useChatModes>['toggle']
+}> = ({ onFileClick, isStagingFiles, stagedFiles, onRemoveStagedFile, modes, onModeToggle }) => (
   <ComposerPrimitive.Root
     data-slot="composer"
     className="relative flex w-full flex-col"
@@ -189,17 +197,20 @@ const Composer: FC<{
         autoFocus
         style={{ fontSize: '16px' }}
       />
-      <div className="relative flex items-center justify-between">
-        {onFileClick && (
-          <button
-            onClick={onFileClick}
-            type="button"
-            className="flex h-8 w-8 items-center justify-center rounded-lg text-text-muted transition-colors hover:bg-muted hover:text-text-secondary"
-            aria-label="Attach file"
-          >
-            <PaperclipIcon className="h-4 w-4" />
-          </button>
-        )}
+      <div className="relative flex items-center justify-between gap-1">
+        <div className="flex items-center gap-1">
+          {onFileClick && (
+            <button
+              onClick={onFileClick}
+              type="button"
+              className="flex h-8 w-8 items-center justify-center rounded-lg text-text-muted transition-colors hover:bg-muted hover:text-text-secondary"
+              aria-label="Attach file"
+            >
+              <PaperclipIcon className="h-4 w-4" />
+            </button>
+          )}
+          <ModePicker modes={modes} onToggle={onModeToggle} />
+        </div>
 
         <ComposerPrimitive.Send asChild>
           <TooltipIconButton

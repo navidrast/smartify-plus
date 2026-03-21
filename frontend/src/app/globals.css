@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -6,28 +6,38 @@
 
 @layer base {
   :root {
-    /* ── Smartify custom tokens ── */
-    --color-bg: #111111;
-    --color-card: #1A1A1A;
-    --color-card-alt: #222222;
-    --color-sidebar: #18181b;
-    --color-sidebar-active: #2a2a30;
-    --color-border: #2E2E2E;
-    --color-text-primary: #FFFFFF;
+    /* ── Stitch tonal surface stack ── */
+    --surface-lowest:  #0E0E0E;
+    --surface-dim:     #131313;
+    --surface-low:     #1C1B1B;
+    --surface:         #131313;
+    --surface-mid:     #20201F;
+    --surface-high:    #2A2A2A;
+    --surface-highest: #353535;
+    --surface-bright:  #393939;
+
+    /* ── Smartify component tokens (aliased to tonal stack) ── */
+    --color-bg:           var(--surface-dim);
+    --color-card:         var(--surface-low);
+    --color-card-alt:     var(--surface-mid);
+    --color-sidebar:      var(--surface-low);
+    --color-sidebar-active: var(--surface-high);
+    --color-border:       #2E2E2E;
+    --color-text-primary: #E5E2E1;
     --color-text-secondary: #B8B9B6;
-    --color-text-muted: #666666;
-    scrollbar-color: #2E2E2E #111111;
+    --color-text-muted:   #DEC1AF;
+    scrollbar-color: #353535 #131313;
 
     /* ── assistant-ui / shadcn semantic tokens (dark default) ── */
-    --foreground: #FFFFFF;
-    --muted: #222222;
-    --muted-foreground: #888888;
-    --popover: #1A1A1A;
-    --popover-foreground: #FFFFFF;
+    --foreground: #E5E2E1;
+    --muted: #20201F;
+    --muted-foreground: #DEC1AF;
+    --popover: #20201F;
+    --popover-foreground: #E5E2E1;
     --primary: #FF8400;
-    --primary-foreground: #FFFFFF;
-    --secondary: #2a2a30;
-    --secondary-foreground: #FFFFFF;
+    --primary-foreground: #4F2500;
+    --secondary: #2A2A2A;
+    --secondary-foreground: #E5E2E1;
     --destructive: #FF5C33;
     --input: #2E2E2E;
     --ring: #FF8400;
@@ -40,15 +50,24 @@
   }
 
   .light {
-    --color-bg: #F8F8F8;
-    --color-card: #FFFFFF;
-    --color-card-alt: #F0F0F0;
-    --color-sidebar: #F4F4F5;
-    --color-sidebar-active: #E4E4E7;
-    --color-border: #E2E2E2;
+    --surface-lowest:  #F0F0F0;
+    --surface-dim:     #F8F8F8;
+    --surface-low:     #F4F4F5;
+    --surface:         #F8F8F8;
+    --surface-mid:     #EBEBEB;
+    --surface-high:    #E4E4E7;
+    --surface-highest: #D4D4D8;
+    --surface-bright:  #FFFFFF;
+
+    --color-bg:           var(--surface-dim);
+    --color-card:         var(--surface-bright);
+    --color-card-alt:     var(--surface-mid);
+    --color-sidebar:      var(--surface-low);
+    --color-sidebar-active: var(--surface-high);
+    --color-border:       #E2E2E2;
     --color-text-primary: #111111;
     --color-text-secondary: #52525B;
-    --color-text-muted: #A1A1AA;
+    --color-text-muted:   #71717A;
     scrollbar-color: #D4D4D8 #F4F4F5;
 
     --foreground: #111111;
@@ -66,7 +85,7 @@
   }
 
   html {
-    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-family: 'Inter', system-ui, sans-serif;
     background-color: var(--color-bg);
     color: var(--color-text-primary);
     overscroll-behavior: none;

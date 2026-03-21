@@ -30,6 +30,18 @@ module.exports = {
           reporting: '#4ade80',
           compliance: '#FF5C33',
         },
+        /* Stitch tonal surface stack */
+        'surface-lowest':  'var(--surface-lowest)',
+        'surface-dim':     'var(--surface-dim)',
+        'surface-low':     'var(--surface-low)',
+        'surface':         'var(--surface)',
+        'surface-mid':     'var(--surface-mid)',
+        'surface-high':    'var(--surface-high)',
+        'surface-highest': 'var(--surface-highest)',
+        'surface-bright':  'var(--surface-bright)',
+        'on-surface':      '#E5E2E1',
+        'on-surface-variant': '#DEC1AF',
+        'outline-variant': '#574335',
         /* shadcn / assistant-ui semantic tokens */
         foreground: 'var(--foreground)',
         muted: {
@@ -53,8 +65,9 @@ module.exports = {
         ring: 'var(--ring)',
       },
       fontFamily: {
+        headline: ['Manrope', 'system-ui', 'sans-serif'],
+        sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
         mono: ['JetBrains Mono', 'ui-monospace', 'monospace'],
-        sans: ['system-ui', '-apple-system', 'sans-serif'],
       },
       borderRadius: {
         lg: 'var(--radius)',
