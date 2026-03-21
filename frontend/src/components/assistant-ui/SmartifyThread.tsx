@@ -35,6 +35,7 @@ interface SmartifyThreadProps {
   isStagingFiles: boolean
   stagedFiles: StagedFile[]
   onRemoveStagedFile: (documentId: string) => void
+  onSuggestionClick?: (text: string) => void
 }
 
 export const SmartifyThread: FC<SmartifyThreadProps> = ({
@@ -45,6 +46,7 @@ export const SmartifyThread: FC<SmartifyThreadProps> = ({
   isStagingFiles,
   stagedFiles,
   onRemoveStagedFile,
+  onSuggestionClick,
 }) => {
   const { modes, toggle } = useChatModes()
   return (
@@ -61,7 +63,7 @@ export const SmartifyThread: FC<SmartifyThreadProps> = ({
         className="relative flex flex-1 flex-col overflow-x-hidden overflow-y-scroll scroll-smooth px-4 pt-4"
       >
         <ThreadPrimitive.Empty>
-          <ThreadWelcome />
+          <ThreadWelcome onSuggestionClick={onSuggestionClick} />
         </ThreadPrimitive.Empty>
 
         <ThreadPrimitive.Messages
@@ -90,6 +92,7 @@ export const SmartifyThread: FC<SmartifyThreadProps> = ({
             onRemoveStagedFile={onRemoveStagedFile}
             modes={modes}
             onModeToggle={toggle}
+            onQuickAction={onSuggestionClick}
           />
         </ThreadPrimitive.ViewportFooter>
       </ThreadPrimitive.Viewport>
@@ -100,7 +103,14 @@ export const SmartifyThread: FC<SmartifyThreadProps> = ({
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // WELCOME (empty thread state)
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-const ThreadWelcome: FC = () => (
+const SUGGESTIONS = [
+  { icon: 'upload_file', text: 'Upload receipt', sub: 'Process OCR & Categorize', message: 'I want to upload a receipt for extraction.' },
+  { icon: 'table_chart', text: 'Import Excel', sub: 'Sync historical ledger', message: 'How do I import an Excel ledger?' },
+  { icon: 'gavel', text: 'Ask GST rules', sub: 'AI Regulatory Lookup', message: 'Explain the Australian GST rules for common expense categories.' },
+  { icon: 'account_balance_wallet', text: 'BAS preparation', sub: 'Draft quarterly statement', message: 'Help me prepare my quarterly BAS statement.' },
+]
+
+const ThreadWelcome: FC<{ onSuggestionClick?: (text: string) => void }> = ({ onSuggestionClick }) => (
   <div className="mx-auto my-auto flex w-full grow flex-col items-center justify-center px-4" style={{ maxWidth: 'var(--thread-max-width)' }}>
     <div className="w-full text-center space-y-8">
       <div className="flex flex-col items-center">
@@ -118,33 +128,26 @@ const ThreadWelcome: FC = () => (
         </p>
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-8">
-        <SuggestionButton
-          icon="upload_file"
-          text="Upload receipt"
-          sub="Process OCR & Categorize"
-        />
-        <SuggestionButton
-          icon="table_chart"
-          text="Import Excel"
-          sub="Sync historical ledger"
-        />
-        <SuggestionButton
-          icon="gavel"
-          text="Ask GST rules"
-          sub="AI Regulatory Lookup"
-        />
-        <SuggestionButton
-          icon="account_balance_wallet"
-          text="BAS preparation"
-          sub="Draft quarterly statement"
-        />
+        {SUGGESTIONS.map((s) => (
+          <SuggestionButton
+            key={s.text}
+            icon={s.icon}
+            text={s.text}
+            sub={s.sub}
+            onClick={() => onSuggestionClick?.(s.message)}
+          />
+        ))}
       </div>
     </div>
   </div>
 )
 
-const SuggestionButton: FC<{ icon: string; text: string; sub: string }> = ({ icon, text, sub }) => (
-  <button className="group flex items-center gap-4 p-4 bg-surface-container border border-[#574335]/10 rounded-xl hover:bg-surface-container-high hover:border-primary-container/30 transition-all duration-200 text-left w-full">
+const SuggestionButton: FC<{ icon: string; text: string; sub: string; onClick?: () => void }> = ({ icon, text, sub, onClick }) => (
+  <button
+    type="button"
+    onClick={onClick}
+    className="group flex items-center gap-4 p-4 bg-surface-container border border-[#574335]/10 rounded-xl hover:bg-surface-container-high hover:border-primary-container/30 transition-all duration-200 text-left w-full"
+  >
     <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-surface-container-highest text-[#FFB784] group-hover:bg-primary-container group-hover:text-on-primary transition-colors">
       <span className="material-symbols-outlined text-[20px]">{icon}</span>
     </div>
@@ -173,6 +176,8 @@ const StagedFileChip: FC<{ name: string; onRemove: () => void }> = ({ name, onRe
   </div>
 )
 
+const QUICK_ACTIONS = ['Generate PDF', 'Export to CSV', 'GST Summary']
+
 const Composer: FC<{
   onFileClick?: () => void
   isStagingFiles: boolean
@@ -180,7 +185,8 @@ const Composer: FC<{
   onRemoveStagedFile: (documentId: string) => void
   modes: ReturnType<typeof useChatModes>['modes']
   onModeToggle: ReturnType<typeof useChatModes>['toggle']
-}> = ({ onFileClick, isStagingFiles, stagedFiles, onRemoveStagedFile, modes, onModeToggle }) => (
+  onQuickAction?: (text: string) => void
+}> = ({ onFileClick, isStagingFiles, stagedFiles, onRemoveStagedFile, modes, onModeToggle, onQuickAction }) => (
   <>
     <ComposerPrimitive.Root
       data-slot="composer"
@@ -194,11 +200,12 @@ const Composer: FC<{
         {/* Quick action chips — only show when no staged files and not staging */}
         {stagedFiles.length === 0 && !isStagingFiles && (
           <div className="flex gap-2 overflow-x-auto px-1 pt-1 pb-0.5 no-scrollbar md:hidden">
-            {['Generate PDF', 'Export to CSV', 'GST Summary'].map((chip) => (
+            {QUICK_ACTIONS.map((chip) => (
               <button
                 key={chip}
                 type="button"
-                className="flex-none rounded-full border border-[#574335]/10 bg-surface-container-high/60 px-4 py-1.5 text-[11px] font-bold text-on-surface-variant backdrop-blur-md whitespace-nowrap"
+                onClick={() => onQuickAction?.(chip)}
+                className="flex-none rounded-full border border-[#574335]/10 bg-surface-container-high/60 px-4 py-1.5 text-[11px] font-bold text-on-surface-variant backdrop-blur-md whitespace-nowrap active:bg-primary-container active:text-on-primary transition-colors"
               >
                 {chip}
               </button>
@@ -280,7 +287,7 @@ const UserMessage: FC = () => {
       style={{ maxWidth: 'var(--thread-max-width)' }}
     >
       <div className="relative col-start-2 min-w-0 flex flex-col items-end gap-1">
-        <div className="break-words rounded-2xl rounded-tr-none bg-surface-container px-5 py-3.5 text-sm text-on-surface shadow-sm">
+        <div className="break-words rounded-2xl rounded-tr-none bg-surface-container px-5 py-3.5 text-sm text-on-surface shadow-sm font-body">
           <MessagePrimitive.Content components={{ Text: UserText }} />
         </div>
         <span className="font-mono text-[10px] text-on-surface-variant px-1">{timeStr}</span>
@@ -334,7 +341,7 @@ const AssistantMessage: FC = () => {
     >
       <div
         data-status={isRunning ? 'running' : 'complete'}
-        className="aui-md break-words px-2 text-sm leading-relaxed text-text-primary"
+        className="aui-md break-words px-2 text-sm leading-relaxed text-text-primary font-body"
       >
         <MessagePrimitive.Content components={{ Text: AssistantMarkdown }} />
       </div>

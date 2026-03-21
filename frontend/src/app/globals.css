@@ -96,7 +96,9 @@
   }
 
   html {
-    font-family: var(--font-inter), system-ui, sans-serif;
+    /* Manrope is the primary UI font — matches Stitch design system.
+       Inter is available via font-[inter] utility for chat/body text. */
+    font-family: var(--font-manrope), system-ui, sans-serif;
     background-color: var(--color-bg);
     color: var(--color-text-primary);
     overscroll-behavior: none;

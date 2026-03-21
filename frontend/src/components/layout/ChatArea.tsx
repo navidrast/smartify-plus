@@ -312,6 +312,7 @@ export function ChatArea({
           isStagingFiles={isStagingFiles}
           stagedFiles={stagedFiles}
           onRemoveStagedFile={handleRemoveStagedFile}
+          onSuggestionClick={(text) => handleSend({ message: text, document_ids: [] })}
         />
       </AssistantRuntimeProvider>
     </div>

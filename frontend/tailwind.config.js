@@ -83,8 +83,11 @@ module.exports = {
         ring: 'var(--ring)',
       },
       fontFamily: {
+        /* Manrope = primary UI font (Stitch design system) */
+        sans: ['var(--font-manrope)', 'system-ui', '-apple-system', 'sans-serif'],
         headline: ['var(--font-manrope)', 'system-ui', 'sans-serif'],
-        sans: ['var(--font-inter)', 'system-ui', '-apple-system', 'sans-serif'],
+        /* Inter = body/chat content */
+        body: ['var(--font-inter)', 'system-ui', '-apple-system', 'sans-serif'],
         mono: ['var(--font-mono)', 'ui-monospace', 'monospace'],
       },
       borderRadius: {
