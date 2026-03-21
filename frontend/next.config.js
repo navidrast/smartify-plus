@@ -9,4 +9,28 @@ module.exports = {
       { source: '/api/:path*', destination: `${backendUrl}/api/:path*` },
     ]
   },
+  async headers() {
+    return [
+      {
+        // HTML pages must never be served stale — JS chunks change hash on every build
+        source: '/(.*)',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'no-cache, no-store, must-revalidate',
+          },
+        ],
+      },
+      {
+        // Static assets have content hashes — safe to cache long-term
+        source: '/_next/static/(.*)',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable',
+          },
+        ],
+      },
+    ]
+  },
 }
