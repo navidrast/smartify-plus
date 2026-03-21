@@ -13,6 +13,16 @@ interface AgentCardProps {
   processingTime?: number
 }
 
+// Stitch-aligned border colours per agent domain
+const AGENT_BORDER: Record<AgentType, string> = {
+  extraction:     'border-primary-container/30',
+  gst:            'border-tertiary-container/30',
+  abn:            'border-[#B2B2FF]/30',
+  reconciliation: 'border-primary-container/30',
+  reporting:      'border-tertiary-container/30',
+  compliance:     'border-[#FF5C33]/30',
+}
+
 export function AgentCard({
   agentType,
   content,
@@ -22,9 +32,10 @@ export function AgentCard({
 }: AgentCardProps) {
   const color = AGENT_COLORS[agentType]
   const label = AGENT_LABELS[agentType]
+  const borderClass = AGENT_BORDER[agentType]
 
   return (
-    <div className="rounded-xl border border-border bg-card p-4">
+    <div className={clsx('rounded-xl border bg-card p-4', borderClass)}>
       {/* Header */}
       <div className="mb-3 flex items-center gap-2">
         <Bot className="h-4 w-4" style={{ color }} />

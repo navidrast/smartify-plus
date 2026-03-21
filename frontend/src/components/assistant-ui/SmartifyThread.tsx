@@ -17,10 +17,6 @@ import {
   CopyIcon,
   CheckIcon,
   XIcon,
-  UploadIcon,
-  FileSpreadsheetIcon,
-  MessageSquareIcon,
-  SparklesIcon,
 } from 'lucide-react'
 import { cn } from '@/lib/cn'
 import { AgentCard } from '@/components/chat/AgentCard'
@@ -106,33 +102,57 @@ export const SmartifyThread: FC<SmartifyThreadProps> = ({
 // WELCOME (empty thread state)
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 const ThreadWelcome: FC = () => (
-  <div className="mx-auto my-auto flex w-full grow flex-col" style={{ maxWidth: 'var(--thread-max-width)' }}>
-    <div className="flex w-full grow flex-col items-center justify-center">
-      <div className="flex size-full flex-col justify-center px-4">
-        <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-accent text-xl font-bold text-white shadow-lg shadow-accent/25">
+  <div className="mx-auto my-auto flex w-full grow flex-col items-center justify-center px-4" style={{ maxWidth: 'var(--thread-max-width)' }}>
+    <div className="w-full text-center space-y-8">
+      <div className="flex flex-col items-center">
+        <div
+          className="mb-8 flex h-[72px] w-[72px] items-center justify-center rounded-2xl bg-primary-container text-on-primary text-4xl font-black transition-transform hover:scale-105 duration-300"
+          style={{ boxShadow: '0 0 40px -5px rgba(255,132,0,0.3)' }}
+        >
           S+
         </div>
-        <h1 className="aui-animate-in font-headline text-2xl font-bold text-on-surface">
+        <h1 className="font-headline text-4xl font-extrabold tracking-tight text-on-surface mb-3">
           Hello there!
         </h1>
-        <p className="aui-animate-in-delayed text-base text-on-surface-variant">
-          How can I help you today?
+        <p className="text-on-surface-variant text-base font-medium max-w-md mx-auto">
+          Your intelligent financial ledger is ready. How can I assist your accounting workflow today?
         </p>
       </div>
-    </div>
-    <div className="grid w-full grid-cols-1 gap-2 pb-4 sm:grid-cols-2">
-      <SuggestionButton icon={<UploadIcon className="h-4 w-4" />} text="Upload a receipt or invoice" />
-      <SuggestionButton icon={<FileSpreadsheetIcon className="h-4 w-4" />} text="Import an Excel spreadsheet" />
-      <SuggestionButton icon={<MessageSquareIcon className="h-4 w-4" />} text="Ask about GST rules" />
-      <SuggestionButton icon={<SparklesIcon className="h-4 w-4" />} text="Help with BAS preparation" />
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-8">
+        <SuggestionButton
+          icon="upload_file"
+          text="Upload receipt"
+          sub="Process OCR & Categorize"
+        />
+        <SuggestionButton
+          icon="table_chart"
+          text="Import Excel"
+          sub="Sync historical ledger"
+        />
+        <SuggestionButton
+          icon="gavel"
+          text="Ask GST rules"
+          sub="AI Regulatory Lookup"
+        />
+        <SuggestionButton
+          icon="account_balance_wallet"
+          text="BAS preparation"
+          sub="Draft quarterly statement"
+        />
+      </div>
     </div>
   </div>
 )
 
-const SuggestionButton: FC<{ icon: React.ReactNode; text: string }> = ({ icon, text }) => (
-  <button className="aui-animate-slide flex h-auto w-full items-center gap-3 rounded-3xl border border-border bg-background px-4 py-3 text-left text-sm text-text-secondary transition-colors hover:bg-muted">
-    <span className="text-text-muted">{icon}</span>
-    <span>{text}</span>
+const SuggestionButton: FC<{ icon: string; text: string; sub: string }> = ({ icon, text, sub }) => (
+  <button className="group flex items-center gap-4 p-4 bg-surface-container border border-[#574335]/10 rounded-xl hover:bg-surface-container-high hover:border-primary-container/30 transition-all duration-200 text-left w-full">
+    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-surface-container-highest text-[#FFB784] group-hover:bg-primary-container group-hover:text-on-primary transition-colors">
+      <span className="material-symbols-outlined text-[20px]">{icon}</span>
+    </div>
+    <div className="flex flex-col min-w-0">
+      <span className="text-on-surface font-semibold text-sm">{text}</span>
+      <span className="text-xs text-on-surface-variant font-mono truncate">{sub}</span>
+    </div>
   </button>
 )
 
@@ -168,7 +188,8 @@ const Composer: FC<{
   >
     <div
       data-slot="composer-shell"
-      className="flex w-full flex-col gap-2 rounded-[var(--composer-radius)] border border-border bg-background p-[var(--composer-padding)] transition-shadow focus-within:border-ring/50 focus-within:ring-2 focus-within:ring-ring/20"
+      className="flex w-full flex-col gap-2 rounded-[var(--composer-radius)] border border-primary-container/15 p-[var(--composer-padding)] transition-all focus-within:ring-2 focus-within:ring-primary-container/20"
+      style={{ background: 'rgba(53,53,53,0.8)', backdropFilter: 'blur(24px)', boxShadow: '0 24px 48px -12px rgba(0,0,0,0.5)' }}
     >
       {/* Staged file chips */}
       {(stagedFiles.length > 0 || isStagingFiles) && (
@@ -237,7 +258,7 @@ const UserMessage: FC = () => (
     style={{ maxWidth: 'var(--thread-max-width)' }}
   >
     <div className="relative col-start-2 min-w-0">
-      <div className="break-words rounded-2xl bg-muted px-4 py-2.5 text-sm text-text-primary">
+      <div className="break-words rounded-2xl bg-surface-container px-5 py-3.5 text-sm text-on-surface">
         <MessagePrimitive.Content components={{ Text: UserText }} />
       </div>
     </div>
@@ -392,13 +413,15 @@ const PipelineStatus: FC<{
   if (isWaiting) {
     return (
       <div className="aui-animate-in mx-auto w-full px-2 py-3" style={{ maxWidth: 'var(--thread-max-width)' }}>
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          <span className="flex gap-1">
-            <span className="h-2 w-2 animate-bounce rounded-full bg-accent [animation-delay:0ms]" />
-            <span className="h-2 w-2 animate-bounce rounded-full bg-accent/70 [animation-delay:150ms]" />
-            <span className="h-2 w-2 animate-bounce rounded-full bg-accent/40 [animation-delay:300ms]" />
-          </span>
-          <span className="text-xs">Thinking...</span>
+        <div className="flex items-center justify-center">
+          <div className="flex items-center gap-3 rounded-full border border-[#574335]/10 bg-surface-container-high/40 px-4 py-1.5 backdrop-blur-md">
+            <span className="flex gap-1">
+              <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-tertiary" />
+              <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-tertiary [animation-delay:75ms]" />
+              <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-tertiary [animation-delay:150ms]" />
+            </span>
+            <span className="font-mono text-[11px] uppercase tracking-wider text-tertiary">Waiting for AI...</span>
+          </div>
         </div>
       </div>
     )
