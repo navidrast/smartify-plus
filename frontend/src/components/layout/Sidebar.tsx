@@ -58,7 +58,7 @@ export function Sidebar({ activeConversationId, conversations, onConversationsCh
         {/* Logo + close button */}
         <div className="flex items-center gap-2 px-3 py-3">
           <div className="flex items-center gap-3 px-2 py-4">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary-container text-on-primary text-xl font-black shadow-lg">
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary-container text-on-primary text-xl font-black shadow-lg font-headline">
               S+
             </div>
             <div className="flex flex-col">

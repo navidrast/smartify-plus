@@ -114,16 +114,13 @@ const ThreadWelcome: FC<{ onSuggestionClick?: (text: string) => void }> = ({ onS
   <div className="mx-auto my-auto flex w-full grow flex-col items-center justify-center px-4" style={{ maxWidth: 'var(--thread-max-width)' }}>
     <div className="w-full text-center space-y-8">
       <div className="flex flex-col items-center">
-        <div
-          className="mb-8 flex h-[72px] w-[72px] items-center justify-center rounded-2xl bg-primary-container text-on-primary text-4xl font-black transition-transform hover:scale-105 duration-300"
-          style={{ boxShadow: '0 0 40px -5px rgba(255,132,0,0.3)' }}
-        >
+        <div className="mb-8 flex h-[72px] w-[72px] items-center justify-center rounded-2xl bg-primary-container text-on-primary text-4xl font-black glow-orange transition-transform hover:scale-105 duration-300 font-headline">
           S+
         </div>
-        <h1 className="font-headline text-4xl font-extrabold tracking-tight text-on-surface mb-3">
+        <h1 className="font-headline text-5xl font-extrabold tracking-tight text-on-surface mb-3">
           Hello there!
         </h1>
-        <p className="text-on-surface-variant text-base font-medium max-w-md mx-auto">
+        <p className="text-on-surface-variant text-lg font-medium max-w-md mx-auto">
           Your intelligent financial ledger is ready. How can I assist your accounting workflow today?
         </p>
       </div>
@@ -235,7 +232,7 @@ const Composer: FC<{
         <ComposerPrimitive.Input
           data-slot="composer-input"
           placeholder={stagedFiles.length > 0 ? 'Add a message or just send the files…' : 'Send a message…'}
-          className="max-h-32 min-h-10 w-full resize-none bg-transparent px-2 py-1 text-sm text-text-primary outline-none placeholder:text-muted-foreground"
+          className="max-h-32 min-h-10 w-full resize-none bg-transparent px-2 py-1 text-sm text-on-surface outline-none placeholder:text-on-surface-variant/50 font-body"
           rows={1}
           autoFocus
           style={{ fontSize: '16px' }}
@@ -341,7 +338,7 @@ const AssistantMessage: FC = () => {
     >
       <div
         data-status={isRunning ? 'running' : 'complete'}
-        className="aui-md break-words px-2 text-sm leading-relaxed text-text-primary font-body"
+        className="aui-md break-words px-2 text-sm leading-relaxed text-on-surface font-body"
       >
         <MessagePrimitive.Content components={{ Text: AssistantMarkdown }} />
       </div>
@@ -361,7 +358,7 @@ const AssistantMarkdown: FC = () => (
     className={cn(
       '[&>p]:my-2 [&>p]:leading-7',
       '[&_a]:text-accent [&_a]:underline [&_a]:underline-offset-4 hover:[&_a]:text-accent/80',
-      '[&_strong]:font-semibold [&_strong]:text-text-primary',
+      '[&_strong]:font-semibold [&_strong]:text-on-surface',
       '[&_code]:rounded [&_code]:bg-muted [&_code]:px-1.5 [&_code]:py-0.5 [&_code]:text-[0.875em] [&_code]:text-accent [&_code]:before:content-none [&_code]:after:content-none',
       '[&_pre]:my-4 [&_pre]:overflow-x-auto [&_pre]:rounded-lg [&_pre]:border [&_pre]:border-border [&_pre]:bg-card [&_pre]:p-4',
       '[&_pre_code]:bg-transparent [&_pre_code]:p-0 [&_pre_code]:text-text-primary',
@@ -372,7 +369,7 @@ const AssistantMarkdown: FC = () => (
       '[&_ul]:my-3 [&_ul]:list-disc [&_ul]:pl-8',
       '[&_ol]:my-3 [&_ol]:list-decimal [&_ol]:pl-8',
       '[&_li]:my-1 [&_li]:leading-7',
-      '[&_blockquote]:my-4 [&_blockquote]:border-l-4 [&_blockquote]:border-accent/40 [&_blockquote]:pl-4 [&_blockquote]:italic [&_blockquote]:text-text-secondary',
+      '[&_blockquote]:my-4 [&_blockquote]:border-l-4 [&_blockquote]:border-primary-container/40 [&_blockquote]:pl-4 [&_blockquote]:italic [&_blockquote]:text-on-surface-variant',
       '[&_table]:my-4 [&_table]:w-full [&_table]:border-collapse [&_table]:text-sm',
       '[&_th]:border [&_th]:border-border [&_th]:bg-muted [&_th]:px-4 [&_th]:py-2 [&_th]:text-left [&_th]:font-semibold',
       '[&_td]:border [&_td]:border-border [&_td]:px-4 [&_td]:py-2',

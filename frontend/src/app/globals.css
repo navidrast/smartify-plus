@@ -98,7 +98,7 @@
   html {
     /* Manrope is the primary UI font — matches Stitch design system.
        Inter is available via font-[inter] utility for chat/body text. */
-    font-family: var(--font-manrope), system-ui, sans-serif;
+    font-family: var(--font-inter), system-ui, sans-serif;
     background-color: var(--color-bg);
     color: var(--color-text-primary);
     overscroll-behavior: none;
@@ -123,6 +123,7 @@
   /* ── Headline (Manrope) — tight tracking + strong weight rendering ── */
   .font-headline,
   [class*="font-headline"] {
+    font-family: var(--font-manrope), system-ui, sans-serif;
     letter-spacing: -0.02em;
     font-feature-settings: "kern" 1, "liga" 1, "ss01" 1;
   }
@@ -165,6 +166,14 @@
   .pt-safe {
     padding-top: env(safe-area-inset-top);
   }
+}
+
+/* ── Stitch design utilities ── */
+.glow-orange {
+  box-shadow: 0 0 40px -5px rgba(255, 132, 0, 0.3);
+}
+.editorial-shadow {
+  box-shadow: 0 24px 48px -12px rgba(0, 0, 0, 0.5);
 }
 
 /* ── assistant-ui animations ── */

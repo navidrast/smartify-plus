@@ -8,26 +8,21 @@ interface ExportButtonsProps {
 
 export function ExportButtons({ conversationId }: ExportButtonsProps) {
   return (
-    <div className="mt-6">
-      <h3 className="mb-3 text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">
-        Export
-      </h3>
-      <div className="flex gap-2">
-        <button
-          onClick={() => window.open(getExportUrl(conversationId, 'excel'), '_blank')}
-          className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-[#574335]/20 bg-surface-container-high px-4 py-2.5 text-xs font-bold text-on-surface hover:bg-surface-container-highest transition-colors"
-        >
-          <span className="material-symbols-outlined text-[18px]">grid_on</span>
-          Excel
-        </button>
-        <button
-          onClick={() => window.open(getExportUrl(conversationId, 'pdf'), '_blank')}
-          className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-primary-container px-4 py-2.5 text-xs font-bold text-on-primary hover:opacity-90 transition-opacity"
-        >
-          <span className="material-symbols-outlined text-[18px]">picture_as_pdf</span>
-          PDF
-        </button>
-      </div>
+    <div className="grid grid-cols-1 gap-3">
+      <button
+        onClick={() => window.open(getExportUrl(conversationId, 'excel'), '_blank')}
+        className="flex w-full items-center justify-center gap-2 rounded-xl border border-[#574335]/30 py-3 text-sm font-bold text-on-surface hover:bg-white/5 transition-colors"
+      >
+        <span className="material-symbols-outlined text-lg">grid_on</span>
+        Export Excel
+      </button>
+      <button
+        onClick={() => window.open(getExportUrl(conversationId, 'pdf'), '_blank')}
+        className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary-container py-3 text-sm font-bold text-on-primary shadow-lg hover:shadow-primary-container/20 transition-all"
+      >
+        <span className="material-symbols-outlined text-lg">picture_as_pdf</span>
+        Export PDF
+      </button>
     </div>
   )
 }

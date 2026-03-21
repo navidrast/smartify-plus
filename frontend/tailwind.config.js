@@ -60,6 +60,8 @@ module.exports = {
         'on-surface':      '#E5E2E1',
         'on-surface-variant': '#DEC1AF',
         'outline-variant': '#574335',
+        /* Stitch primary color (warm peach — icons/text, NOT buttons) */
+        'primary-color': '#ffb784',
         /* shadcn / assistant-ui semantic tokens */
         foreground: 'var(--foreground)',
         muted: {
@@ -83,11 +85,11 @@ module.exports = {
         ring: 'var(--ring)',
       },
       fontFamily: {
-        /* Manrope = primary UI font (Stitch design system) */
-        sans: ['var(--font-manrope)', 'system-ui', '-apple-system', 'sans-serif'],
-        headline: ['var(--font-manrope)', 'system-ui', 'sans-serif'],
-        /* Inter = body/chat content */
+        /* Inter = default body font (Stitch design system) */
+        sans: ['var(--font-inter)', 'system-ui', '-apple-system', 'sans-serif'],
         body: ['var(--font-inter)', 'system-ui', '-apple-system', 'sans-serif'],
+        /* Manrope = headline font only */
+        headline: ['var(--font-manrope)', 'system-ui', 'sans-serif'],
         mono: ['var(--font-mono)', 'ui-monospace', 'monospace'],
       },
       borderRadius: {

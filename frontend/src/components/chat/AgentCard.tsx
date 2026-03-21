@@ -82,7 +82,7 @@ export function AgentCard({
     'ERROR'
 
   return (
-    <div className={clsx('relative overflow-hidden rounded-xl border bg-surface-container p-4 flex flex-col gap-3', borderClass)}>
+    <div className={clsx('relative overflow-hidden rounded-2xl border bg-surface-container-low p-4 flex flex-col gap-3 shadow-lg', borderClass)}>
       {/* Watermark background icon */}
       <div className="absolute top-0 right-0 p-2 opacity-10 pointer-events-none select-none">
         <span className="material-symbols-outlined text-4xl">{watermark}</span>

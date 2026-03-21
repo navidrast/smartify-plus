@@ -19,9 +19,9 @@ export const AGENT_LABELS: Record<AgentType, string> = {
 }
 
 export const GST_STYLES: Record<GSTCode, { text: string; bg: string; label: string }> = {
-  '10%': { text: 'text-gst-10', bg: 'bg-gst-10-bg', label: 'GST 10%' },
-  '0%': { text: 'text-gst-10', bg: 'bg-gst-10-bg', label: 'GST Free' },
-  unknown: { text: 'text-gst-unknown', bg: 'bg-gst-unknown-bg', label: 'GST Unknown' },
+  '10%': { text: 'text-tertiary border-tertiary/20', bg: 'bg-tertiary-container/20', label: '10% GST' },
+  '0%': { text: 'text-on-surface-variant border-outline-variant/20', bg: 'bg-surface-variant', label: '0% GST' },
+  unknown: { text: 'text-primary-container border-primary-container/20', bg: 'bg-primary-container/10', label: 'GST Unknown' },
 }
 
 export const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'

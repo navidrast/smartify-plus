@@ -69,7 +69,7 @@ export function Inspector({ conversationId, onClose }: InspectorProps) {
           <RecordDetail record={selected} />
           <AgentNotes notes={selected.notes} />
           {conversationId && (
-            <div className="mt-6">
+            <div className="mt-4">
               <ExportButtons conversationId={conversationId} />
             </div>
           )}
@@ -122,7 +122,7 @@ export function Inspector({ conversationId, onClose }: InspectorProps) {
           </ScrollArea>
 
           {conversationId && (
-            <div className="border-t border-[#574335]/10 px-4 py-4">
+            <div className="border-t border-[#574335]/10 bg-[#1A1A1A] p-6">
               <ExportButtons conversationId={conversationId} />
             </div>
           )}
