@@ -130,12 +130,15 @@ export function SettingsModal({ onClose }: SettingsModalProps) {
                 </div>
               </div>
 
-              <div className="flex justify-end pt-2">
+              <div className="mt-12 flex items-center justify-end gap-4 border-t border-[#574335]/15 pt-8">
                 <button
                   onClick={onClose}
-                  className="bg-primary-container text-on-primary px-8 py-2.5 rounded-lg font-bold text-sm transition-transform active:scale-95"
+                  className="px-6 py-2.5 rounded-lg text-sm font-semibold text-on-surface-variant hover:text-on-surface transition-colors"
                 >
-                  Save
+                  Discard
+                </button>
+                <button className="px-8 py-2.5 rounded-lg bg-primary-container text-on-primary font-bold text-sm hover:scale-[1.02] active:scale-95 transition-all" style={{ boxShadow: '0 24px 48px -12px rgba(0,0,0,0.5)' }}>
+                  Save Changes
                 </button>
               </div>
             </div>

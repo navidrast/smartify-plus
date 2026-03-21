@@ -124,6 +124,32 @@ export function AppShell({ conversationId }: AppShellProps) {
           />
         </div>
       </div>
+
+      {/* ── Mobile bottom navigation ── */}
+      <nav className="fixed bottom-0 w-full z-40 flex md:hidden justify-around items-center px-6 py-3 bg-[#0E0E0E]/80 backdrop-blur-xl border-t border-[#574335]/15">
+        <button
+          onClick={() => setSidebarOpen(true)}
+          className="flex flex-col items-center justify-center text-on-surface-variant p-2 hover:text-primary-container transition-colors"
+        >
+          <span className="material-symbols-outlined">chat_bubble</span>
+          <span className="font-mono text-[10px] mt-1">CHAT</span>
+        </button>
+        <button className="flex flex-col items-center justify-center text-on-surface-variant p-2 hover:text-primary-container transition-colors">
+          <span className="material-symbols-outlined">history</span>
+          <span className="font-mono text-[10px] mt-1">HISTORY</span>
+        </button>
+        <button
+          onClick={() => setInspectorOpen(true)}
+          className="flex flex-col items-center justify-center bg-primary-container text-on-primary rounded-xl p-2 scale-110 shadow-lg"
+        >
+          <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>account_tree</span>
+          <span className="font-mono text-[10px] mt-1">AGENTS</span>
+        </button>
+        <button className="flex flex-col items-center justify-center text-on-surface-variant p-2 hover:text-primary-container transition-colors">
+          <span className="material-symbols-outlined">person</span>
+          <span className="font-mono text-[10px] mt-1">USER</span>
+        </button>
+      </nav>
     </div>
   )
 }

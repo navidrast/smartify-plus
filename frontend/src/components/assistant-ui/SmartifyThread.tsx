@@ -13,7 +13,6 @@ import { TooltipIconButton } from './tooltip-icon-button'
 import {
   ArrowUpIcon,
   ArrowDownIcon,
-  PaperclipIcon,
   CopyIcon,
   CheckIcon,
   XIcon,
@@ -80,7 +79,7 @@ export const SmartifyThread: FC<SmartifyThreadProps> = ({
         />
 
         <ThreadPrimitive.ViewportFooter
-          className="sticky bottom-0 mx-auto mt-auto flex w-full flex-col gap-4 overflow-visible bg-background pb-4 md:pb-6"
+          className="sticky bottom-0 mx-auto mt-auto flex w-full flex-col gap-4 overflow-visible bg-background pb-16 md:pb-6"
           style={{ maxWidth: 'var(--thread-max-width)' }}
         >
           <ThreadScrollToBottom />
@@ -160,16 +159,16 @@ const SuggestionButton: FC<{ icon: string; text: string; sub: string }> = ({ ico
 // COMPOSER (input bar — mirrors assistant-ui composer)
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 const StagedFileChip: FC<{ name: string; onRemove: () => void }> = ({ name, onRemove }) => (
-  <div className="flex items-center gap-1 rounded-lg border border-border bg-muted px-2 py-1 text-xs text-text-secondary">
-    <PaperclipIcon className="h-3 w-3 shrink-0 text-text-muted" />
+  <div className="flex items-center gap-1 rounded-lg border border-[#574335]/10 bg-surface-container-high px-2 py-1 text-xs text-on-surface">
+    <span className="material-symbols-outlined text-[14px] text-on-surface-variant">attach_file</span>
     <span className="max-w-[140px] truncate">{name}</span>
     <button
       onClick={onRemove}
       type="button"
-      className="ml-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded text-text-muted hover:text-text-primary"
+      className="ml-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded text-on-surface-variant hover:text-on-surface"
       aria-label={`Remove ${name}`}
     >
-      <XIcon className="h-3 w-3" />
+      <span className="material-symbols-outlined text-[12px]">close</span>
     </button>
   </div>
 )
@@ -182,88 +181,113 @@ const Composer: FC<{
   modes: ReturnType<typeof useChatModes>['modes']
   onModeToggle: ReturnType<typeof useChatModes>['toggle']
 }> = ({ onFileClick, isStagingFiles, stagedFiles, onRemoveStagedFile, modes, onModeToggle }) => (
-  <ComposerPrimitive.Root
-    data-slot="composer"
-    className="relative flex w-full flex-col"
-  >
-    <div
-      data-slot="composer-shell"
-      className="flex w-full flex-col gap-2 rounded-[var(--composer-radius)] border border-primary-container/15 p-[var(--composer-padding)] transition-all focus-within:ring-2 focus-within:ring-primary-container/20"
-      style={{ background: 'rgba(53,53,53,0.8)', backdropFilter: 'blur(24px)', boxShadow: '0 24px 48px -12px rgba(0,0,0,0.5)' }}
+  <>
+    <ComposerPrimitive.Root
+      data-slot="composer"
+      className="relative flex w-full flex-col"
     >
-      {/* Staged file chips */}
-      {(stagedFiles.length > 0 || isStagingFiles) && (
-        <div className="flex flex-wrap gap-1.5 px-2 pt-1">
-          {stagedFiles.map((f) => (
-            <StagedFileChip
-              key={f.documentId}
-              name={f.name}
-              onRemove={() => onRemoveStagedFile(f.documentId)}
-            />
-          ))}
-          {isStagingFiles && (
-            <div className="flex items-center gap-1.5 rounded-lg border border-border bg-muted px-2 py-1 text-xs text-muted-foreground">
-              <span className="h-2 w-2 animate-pulse rounded-full bg-accent" />
-              Uploading...
-            </div>
-          )}
-        </div>
-      )}
+      <div
+        data-slot="composer-shell"
+        className="flex w-full flex-col gap-2 rounded-[var(--composer-radius)] border border-primary-container/15 p-[var(--composer-padding)] transition-all focus-within:ring-2 focus-within:ring-primary-container/20"
+        style={{ background: 'rgba(53,53,53,0.8)', backdropFilter: 'blur(24px)', boxShadow: '0 24px 48px -12px rgba(0,0,0,0.5)' }}
+      >
+        {/* Quick action chips — only show when no staged files and not staging */}
+        {stagedFiles.length === 0 && !isStagingFiles && (
+          <div className="flex gap-2 overflow-x-auto px-1 pt-1 pb-0.5 no-scrollbar md:hidden">
+            {['Generate PDF', 'Export to CSV', 'GST Summary'].map((chip) => (
+              <button
+                key={chip}
+                type="button"
+                className="flex-none rounded-full border border-[#574335]/10 bg-surface-container-high/60 px-4 py-1.5 text-[11px] font-bold text-on-surface-variant backdrop-blur-md whitespace-nowrap"
+              >
+                {chip}
+              </button>
+            ))}
+          </div>
+        )}
 
-      <ComposerPrimitive.Input
-        data-slot="composer-input"
-        placeholder={stagedFiles.length > 0 ? 'Add a message or just send the files…' : 'Send a message…'}
-        className="max-h-32 min-h-10 w-full resize-none bg-transparent px-2 py-1 text-sm text-text-primary outline-none placeholder:text-muted-foreground"
-        rows={1}
-        autoFocus
-        style={{ fontSize: '16px' }}
-      />
-      <div className="relative flex items-center justify-between gap-1">
-        <div className="flex items-center gap-1">
-          {onFileClick && (
-            <button
-              onClick={onFileClick}
-              type="button"
-              className="flex h-8 w-8 items-center justify-center rounded-lg text-text-muted transition-colors hover:bg-muted hover:text-text-secondary"
-              aria-label="Attach file"
+        {/* Staged file chips */}
+        {(stagedFiles.length > 0 || isStagingFiles) && (
+          <div className="flex flex-wrap gap-1.5 px-2 pt-1">
+            {stagedFiles.map((f) => (
+              <StagedFileChip
+                key={f.documentId}
+                name={f.name}
+                onRemove={() => onRemoveStagedFile(f.documentId)}
+              />
+            ))}
+            {isStagingFiles && (
+              <div className="flex items-center gap-1.5 rounded-lg border border-[#574335]/10 bg-surface-container-high px-2 py-1 text-xs text-on-surface-variant">
+                <span className="h-2 w-2 animate-pulse rounded-full bg-accent" />
+                Uploading...
+              </div>
+            )}
+          </div>
+        )}
+
+        <ComposerPrimitive.Input
+          data-slot="composer-input"
+          placeholder={stagedFiles.length > 0 ? 'Add a message or just send the files…' : 'Send a message…'}
+          className="max-h-32 min-h-10 w-full resize-none bg-transparent px-2 py-1 text-sm text-text-primary outline-none placeholder:text-muted-foreground"
+          rows={1}
+          autoFocus
+          style={{ fontSize: '16px' }}
+        />
+        <div className="relative flex items-center justify-between gap-1">
+          <div className="flex items-center gap-1">
+            {onFileClick && (
+              <button
+                onClick={onFileClick}
+                type="button"
+                className="flex h-8 w-8 items-center justify-center rounded-lg text-text-muted transition-colors hover:bg-muted hover:text-text-secondary"
+                aria-label="Attach file"
+              >
+                <span className="material-symbols-outlined text-[18px]">attach_file</span>
+              </button>
+            )}
+            <ModePicker modes={modes} onToggle={onModeToggle} />
+          </div>
+
+          <ComposerPrimitive.Send asChild>
+            <TooltipIconButton
+              tooltip="Send message"
+              side="bottom"
+              variant="default"
+              className="h-8 w-8 rounded-full"
             >
-              <PaperclipIcon className="h-4 w-4" />
-            </button>
-          )}
-          <ModePicker modes={modes} onToggle={onModeToggle} />
+              <ArrowUpIcon className="h-4 w-4" />
+            </TooltipIconButton>
+          </ComposerPrimitive.Send>
         </div>
-
-        <ComposerPrimitive.Send asChild>
-          <TooltipIconButton
-            tooltip="Send message"
-            side="bottom"
-            variant="default"
-            className="h-8 w-8 rounded-full"
-          >
-            <ArrowUpIcon className="h-4 w-4" />
-          </TooltipIconButton>
-        </ComposerPrimitive.Send>
       </div>
-    </div>
-  </ComposerPrimitive.Root>
+    </ComposerPrimitive.Root>
+    <p className="mt-2 text-center font-mono text-[10px] text-on-surface-variant/40 hidden md:block">
+      AI can make mistakes. Check important financial info.
+    </p>
+  </>
 )
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // USER MESSAGE (right-aligned with muted bg)
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-const UserMessage: FC = () => (
-  <MessagePrimitive.Root
-    data-role="user"
-    className="aui-animate-in mx-auto grid w-full auto-rows-auto grid-cols-[minmax(72px,1fr)_auto] content-start gap-y-2 px-2 py-3"
-    style={{ maxWidth: 'var(--thread-max-width)' }}
-  >
-    <div className="relative col-start-2 min-w-0">
-      <div className="break-words rounded-2xl bg-surface-container px-5 py-3.5 text-sm text-on-surface">
-        <MessagePrimitive.Content components={{ Text: UserText }} />
+const UserMessage: FC = () => {
+  const now = new Date()
+  const timeStr = now.toLocaleTimeString('en-AU', { hour: '2-digit', minute: '2-digit' })
+  return (
+    <MessagePrimitive.Root
+      data-role="user"
+      className="aui-animate-in mx-auto grid w-full auto-rows-auto grid-cols-[minmax(72px,1fr)_auto] content-start gap-y-2 px-2 py-3"
+      style={{ maxWidth: 'var(--thread-max-width)' }}
+    >
+      <div className="relative col-start-2 min-w-0 flex flex-col items-end gap-1">
+        <div className="break-words rounded-2xl rounded-tr-none bg-surface-container px-5 py-3.5 text-sm text-on-surface shadow-sm">
+          <MessagePrimitive.Content components={{ Text: UserText }} />
+        </div>
+        <span className="font-mono text-[10px] text-on-surface-variant px-1">{timeStr}</span>
       </div>
-    </div>
-  </MessagePrimitive.Root>
-)
+    </MessagePrimitive.Root>
+  )
+}
 
 const UserText: FC<{ text: string }> = ({ text }) => (
   <p className="whitespace-pre-wrap leading-relaxed">{text}</p>
