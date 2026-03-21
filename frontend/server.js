@@ -84,6 +84,21 @@ const server = createServer(async (req, res) => {
     }
 
     // 3. Everything else goes to Next.js (page routes, RSC, etc.)
+    //    Force no-cache on HTML responses so browsers always fetch fresh pages.
+    //    Next.js sets s-maxage=31536000 on statically generated pages by default
+    //    which causes browsers (and Cloudflare) to serve stale HTML after deploys.
+    const origSetHeader = res.setHeader.bind(res)
+    res.setHeader = function (name, value) {
+      if (
+        typeof name === 'string' &&
+        name.toLowerCase() === 'cache-control' &&
+        typeof value === 'string' &&
+        value.includes('s-maxage')
+      ) {
+        return origSetHeader(name, 'no-cache, no-store, must-revalidate')
+      }
+      return origSetHeader(name, value)
+    }
     await reqHandler(req, res)
   } catch (err) {
     console.error('[server error]', err)
