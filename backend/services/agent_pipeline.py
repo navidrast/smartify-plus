@@ -94,7 +94,7 @@ async def _generate_title(
             ],
             temperature=0.3,
             max_tokens=20,
-            timeout=10,
+            timeout=30,
         )
         raw = response.choices[0].message.content or ""
         title = raw.strip().strip('"').strip("'").strip()[:60]
@@ -147,7 +147,7 @@ async def _conversational_reply(user_message: str, websocket_send: Callable) -> 
         ],
         temperature=0.5,
         max_tokens=512,
-        timeout=30,
+        timeout=120,
     )
     reply = response.choices[0].message.content or "I'm here to help with your accounting queries."
 
